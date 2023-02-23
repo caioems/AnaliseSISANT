@@ -8,7 +8,7 @@ from wordcloud import WordCloud
 #%matplotlib inline
 
 
-st.write('# Aeronaves no SISANT (ANAC)')
+st.markdown('# Aeronaves no SISANT (ANAC)')
 
 st.markdown('''
             Para este projeto foram utilizados dados públicos do Sistema de Aeronaves não Tripuladas (SISANT), um orgão da Agência Nacional de Aviação Civil (ANAC), hospedados no portal [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados), contendo as aeronaves não tripuladas cadastradas em cumprimento ao parágrafo E94.301(b) do [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).''')
@@ -93,7 +93,7 @@ st.markdown('''
 ### Metadados da tabela:
 
 - `CODIGO_AERONAVE`: Código da Aeronave. Segue regras:
-    - Uso Recreativo (Aeromodelo): PR-XXXXXXXXX;# %% 
+    - Uso Recreativo (Aeromodelo): PR-XXXXXXXXX;# 
     - Uso não recreativo básico (RPA Classe 3 operada em linha de visada visual abaixo de 400 pés): PP-XXXXXXXXX;
     - Uso avançado (RPA Classe 2 e demais Classe 3): PS-XXXXXXXXX;  
     - Obs: cada X representa um número 0-9.
@@ -116,37 +116,46 @@ st.markdown('''
  
 - `PESO_MAXIMO_DECOLAGEM_KG`: Peso máximo de decolagem, numérico, com duas casas decimais, em kilogramas.
 
-- `Ramo de atividade`: 
+- `RAMO_ATIVIDADE`: 
     - Recreativo (aeromodelos);
     - Experimental (aeronave avançada destinada exclusivamente a operações com propósitos experimentais);
     - Outros ramos de atividade conforme declarado pelo cadastrante.
 ''')
 
+st.markdown('### Pré-processamento dos dados')
 
-## Informações sobre as colunas:
+st.markdown(
+    '''Para responder a primeira pergunta foi necessário indexar o dataframe. A coluna CODIGO_AERONAVE era ideal para isso, já que teoricamente apresenta valores únicos e padronizados.
+       
+    Porém, foram observados valores duplicados na coluna que precisaram ser removidos.'''
+    )
 
 
+st.code(
+    '''#removendo espaços em branco
+    df['CODIGO_AERONAVE'] = df['CODIGO_AERONAVE'].str.strip()
+    df['CODIGO_AERONAVE'] = df['CODIGO_AERONAVE'].str.replace(" ", "")
+    
+    #removendo duplicatas
+    df = df.drop_duplicates(subset=['CODIGO_AERONAVE'], keep='first')'''
+    )
 
-# Para responder a primeira pergunta foi necessário indexar o dataframe. A coluna CODIGO_AERONAVE era ideal para isso, já que teoricamente apresenta valores únicos e padronizados.   
-# Porém, foram observados valores duplicados na coluna que precisaram ser removidos.
-
-# %%
 #removendo possíveis espaços em branco
 df['CODIGO_AERONAVE'] = df['CODIGO_AERONAVE'].str.strip()
 df['CODIGO_AERONAVE'] = df['CODIGO_AERONAVE'].str.replace(" ", "")
 
-#checando as duplicatas para entender se as outras colunas também possuem dados repetidos
-dupl = df[df.duplicated(subset=['CODIGO_AERONAVE'], keep=False)]
-print(dupl.sort_values(by=['CODIGO_AERONAVE']).head(6))
-
-
-# Considerando que os registros são repetições idênticas, foram eliminadas então as últimas entradas.   
-# Em seguida, a coluna também foi verificada quanto a valores que não seguiam os padrões de dígitos apresentados nos metadados do dataset.  
-# Finalmente, a coluna 'CODIGO_AERONAVE' foi transformada no index do dataframe.
-
-# %%
-#Limpando as duplicatas
+#removendo duplicatas
 df = df.drop_duplicates(subset=['CODIGO_AERONAVE'], keep='first')
+
+#checando as duplicatas para entender se as outras colunas também possuem dados repetidos
+# dupl = df[df.duplicated(subset=['CODIGO_AERONAVE'], keep=False)]
+# print(dupl.sort_values(by=['CODIGO_AERONAVE']).head(6))
+
+st.markdown(
+    '''Considerando que os registros são repetições idênticas, foram eliminadas então as últimas entradas.   
+    Em seguida, a coluna também foi verificada quanto a valores que não seguiam os padrões de dígitos apresentados nos metadados do dataset.  
+    Finalmente, a coluna 'CODIGO_AERONAVE' foi transformada no index do dataframe.'''
+    )
 
 #checando se os padrões de código seguem os descritos nos metadados e removendo os que não seguirem
 nrows_before = df.shape[0]
