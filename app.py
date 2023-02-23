@@ -10,38 +10,36 @@ from wordcloud import WordCloud
 
 st.markdown('# Aeronaves no SISANT (ANAC)')
 
-st.markdown('''
-            Para este projeto foram utilizados dados públicos do Sistema de Aeronaves não Tripuladas (SISANT), um orgão da Agência Nacional de Aviação Civil (ANAC), hospedados no portal [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados), contendo as aeronaves não tripuladas cadastradas em cumprimento ao parágrafo E94.301(b) do [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).''')
+st.markdown('''Para este projeto foram utilizados dados públicos do Sistema de Aeronaves não Tripuladas (SISANT), um orgão da Agência Nacional de Aviação Civil (ANAC), hospedados no portal [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados), contendo as aeronaves não tripuladas cadastradas em cumprimento ao parágrafo E94.301(b) do [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).''')
  
-st.markdown('''O objetivo deste projeto é fixar métodos e práticas de data analytics utilizando Python. Considerando que os dados são crus, a experiência torna-se mais didática, uma vez que precisarão de pré-processamento.
+st.markdown('''O objetivo deste projeto é fixar métodos e práticas de data analytics utilizando Python. Considerando que os dados são crus, a experiência torna-se mais didática, uma vez que precisarão de pré-processamento.''')
  
-Assim sendo, pretende-se responder as seguintes perguntas:
+st.markdown('''Assim sendo, pretende-se responder as seguintes perguntas:
 - Quantos drones estão cadastrados no dataset? Qual o status de cada cadastro?
 - Quantos diferentes OPERADORes estão cadastrados? Quais suas naturezas?
 - Qual uso é feito desses drones?
 - Qual empresa é a maior FABRICANTE? E quais seus os MODELOs mais populares?
-
 _____'''
 )
 
-st.code('''
-    #importando bibliotecas
-    import pandas as pd
-    import streamlit as st
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    from re import match
-    from wordcloud import WordCloud''',
-    language='python'
-    )
+st.code(
+'''#importando bibliotecas
+import pandas as pd
+import streamlit as st
+import matplotlib.pyplot as plt
+import seaborn as sns
+from re import match
+from wordcloud import WordCloud''',
+language='python'
+)
 
 pd.options.mode.chained_assignment = None
 sns.set_theme(
     style = 'white',
     palette = 'tab10')
 
-st.code('''
-#carregando dados e visualizando a tabela
+st.code(
+'''#carregando dados e visualizando a tabela
 @st.cache_data
 def load_data():
     url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
@@ -56,8 +54,9 @@ def load_data():
     df.dropna(inplace=True)
     return df
     
-df = load_data()
-''')
+df = load_data()''',
+language='python'
+)
 
 #carregando dados e visualizando a tabela
 @st.cache_data
@@ -96,7 +95,7 @@ st.markdown('''
 ### Metadados da tabela:
 
 - `CODIGO_AERONAVE`: Código da Aeronave. Segue regras:
-    - Uso Recreativo (Aeromodelo): PR-XXXXXXXXX;# 
+    - Uso Recreativo (Aeromodelo): PR-XXXXXXXXX; 
     - Uso não recreativo básico (RPA Classe 3 operada em linha de visada visual abaixo de 400 pés): PP-XXXXXXXXX;
     - Uso avançado (RPA Classe 2 e demais Classe 3): PS-XXXXXXXXX;  
     - Obs: cada X representa um número 0-9.
@@ -130,18 +129,17 @@ _____
 st.markdown('### Pré-processamento dos dados')
 
 st.markdown(
-    '''Inicialmente a tabela foi indexada. A coluna CODIGO_AERONAVE era ideal para esse fim, já que teoricamente apresentava valores únicos e padronizados para cada aeronave do sistema.
-    Porém, foram observados valores duplicados na coluna que precisaram ser removidos.'''
-    )
+'''Inicialmente a tabela foi indexada. A coluna CODIGO_AERONAVE era ideal para esse fim, já que teoricamente apresentava valores únicos e padronizados para cada aeronave do sistema. Porém, foram observados valores duplicados na coluna que precisaram ser removidos.'''
+)
 
 st.code(
-    '''#removendo espaços em branco e duplicatas
-    df['CODIGO_AERONAVE'] = df['CODIGO_AERONAVE'].str.strip()
-    df['CODIGO_AERONAVE'] = df['CODIGO_AERONAVE'].str.replace(" ", "")
-    
-    df = df.drop_duplicates(subset=['CODIGO_AERONAVE'], keep='first')''',
-    language='python'
-    )
+'''#removendo espaços em branco e registros duplicados
+df['CODIGO_AERONAVE'] = df['CODIGO_AERONAVE'].str.strip()
+df['CODIGO_AERONAVE'] = df['CODIGO_AERONAVE'].str.replace(" ", "")
+
+df = df.drop_duplicates(subset=['CODIGO_AERONAVE'], keep='first')''',
+language='python'
+)
 
 #removendo possíveis espaços em branco
 df['CODIGO_AERONAVE'] = df['CODIGO_AERONAVE'].str.strip()
@@ -155,67 +153,74 @@ df = df.drop_duplicates(subset=['CODIGO_AERONAVE'], keep='first')
 # print(dupl.sort_values(by=['CODIGO_AERONAVE']).head(6))
 
 st.markdown(
-    '''Considerando que os registros são repetições idênticas, foram eliminadas então as últimas entradas.  
-       
-    Em seguida, a coluna também foi verificada quanto a valores que não seguiam os padrões de dígitos apresentados nos metadados do dataset.  
-      
-    Finalmente, a coluna 'CODIGO_AERONAVE' foi transformada no index do dataframe.'''
-    )
+'''Em seguida, a coluna também foi verificada quanto a valores que não seguiam os padrões de dígitos apresentados nos metadados do dataset.  
+    
+Finalmente, a coluna 'CODIGO_AERONAVE' foi transformada no index do dataframe.'''
+)
 
 st.code(
-    '''#checando se os padrões de código seguem os descritos nos metadados e removendo os que não seguirem
-    nrows_before = df.shape[0]
+'''#checando se os padrões de código seguem o padrão dos metadados 
+#e removendo os que não seguirem
+nrows_before = df.shape[0]
 
-    mask = []
-    for code in df['CODIGO_AERONAVE']:
-        mask.append(bool(match('^(PR|PP|PS)-\d{9}$', code)))
-    df = df[mask]
+mask = []
+pattern = '^(PR|PP|PS)-\d{9}$'
+for code in df['CODIGO_AERONAVE']:
+    mask.append(bool(match(pattern, code)))
+df = df[mask]
 
-    nrows_after = df.shape[0]
+nrows_after = df.shape[0]
 
-    #transformando a coluna no index do dataframe:
-    df = df.set_index(df['CODIGO_AERONAVE'])'''
-    )
+#transformando a coluna no index do dataframe:
+df = df.set_index(df['CODIGO_AERONAVE'])
+df = df.drop(('CODIGO_AERONAVE'), axis=1)''',
+language='python'
+)
+
 #checando se os padrões de código seguem os descritos nos metadados e removendo os que não seguirem
 nrows_before = df.shape[0]
 
 mask = []
+pattern = '^(PR|PP|PS)-\d{9}$'
 for code in df['CODIGO_AERONAVE']:
-    mask.append(bool(match('^(PR|PP|PS)-\d{9}$', code)))
+    mask.append(bool(match(pattern, code)))
 df = df[mask]
 
 nrows_after = df.shape[0]
-# print(f'Registros removidos por padrão inválido: {nrows_before - nrows_after}')
-# print(f'Quantidade de registros válidos no df: {nrows_after}')
 
 st.markdown(
-    f'''>Registros removidos por padrão inválido: {nrows_before - nrows_after}
-
-    Quantidade de registros válidos no df: {nrows_after}''')
+f'''>Registros removidos por padrão inválido: **{nrows_before - nrows_after}**  
+Quantidade de registros válidos na tabela: **{nrows_after}**''')
 
 #transformando a coluna no index do dataframe:
 df = df.set_index(df['CODIGO_AERONAVE'])
-#df = df.drop(('CODIGO_AERONAVE'), axis=1)
+df = df.drop(('CODIGO_AERONAVE'), axis=1)
 
+st.dataframe(
+    df,
+    height=250,
+    use_container_width=True)
 
-# Com o index do dataframe pronto, seguiu-se com a preparação dos dados. As colunas DATA_VALIDADE, CPF_CNPJ, TIPO_USO, FABRICANTE, PESO_MAXIMO_DECOLAGEM_KG e RAMO_ATIVIDADE foram validadas e, quando necessário, transformadas.
+st.markdown(
+'Seguindo com a preparação dos dados,  as colunas `CPF_CNPJ`, `TIPO_USO`, `FABRICANTE` e `RAMO_ATIVIDADE` foram validadas e, quando necessário, transformadas.'
+)
 
-# %%
-#validando a coluna 'CPF_CNPJ'
+st.code(
+'''#limpando a coluna 'CPF_CNPJ'
 df['CPF_CNPJ'].str.strip()
 df['CPF_CNPJ'].str.replace(" ", "")
-if df['CPF_CNPJ'].value_counts().sum() == nrows_after:
-    print('Coluna CPF_CNPJ: OK')
-else:
-    print('Coluna CPF_CNPJ: Problema')
 
-#validando coluna TIPO_USO e convertendo dtype
+#convertendo dtype
+df['TIPO_USO'] = df['TIPO_USO'].astype('category')''',
+language='python'
+)
+
+#limpando a coluna 'CPF_CNPJ'
+df['CPF_CNPJ'].str.strip()
+df['CPF_CNPJ'].str.replace(" ", "")
+
+#convertendo dtype da coluna 'TIPO_USO'
 df['TIPO_USO'] = df['TIPO_USO'].astype('category')
-if df['TIPO_USO'].value_counts().sum() == nrows_after:
-    print('Coluna TIPO_USO: OK')
-else:
-    print('Coluna TIPO_USO: Problema')
-
 
 # As colunas 'FABRICANTE' e 'MODELO' precisaram de maior atenção pois, dada a natureza de seu input, apresentam diferentes valores para mesma categoria  
 # Exemplo: 'DJI', 'dji' e 'Dji' representam a mesma FABRICANTE, DJI.
