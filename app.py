@@ -126,16 +126,16 @@ st.markdown('### Pré-processamento dos dados')
 
 st.markdown(
     '''Para responder a primeira pergunta foi necessário indexar o dataframe. A coluna CODIGO_AERONAVE era ideal para isso, já que teoricamente apresenta valores únicos e padronizados.  
+    
     Porém, foram observados valores duplicados na coluna que precisaram ser removidos.'''
     )
 
 
 st.code(
-    '''#removendo espaços em branco
+    '''#removendo espaços em branco e duplicatas
     df['CODIGO_AERONAVE'] = df['CODIGO_AERONAVE'].str.strip()
     df['CODIGO_AERONAVE'] = df['CODIGO_AERONAVE'].str.replace(" ", "")
     
-    #removendo duplicatas
     df = df.drop_duplicates(subset=['CODIGO_AERONAVE'], keep='first')''',
     language='python'
     )
@@ -152,8 +152,10 @@ df = df.drop_duplicates(subset=['CODIGO_AERONAVE'], keep='first')
 # print(dupl.sort_values(by=['CODIGO_AERONAVE']).head(6))
 
 st.markdown(
-    '''Considerando que os registros são repetições idênticas, foram eliminadas então as últimas entradas.   
+    '''Considerando que os registros são repetições idênticas, foram eliminadas então as últimas entradas.  
+       
     Em seguida, a coluna também foi verificada quanto a valores que não seguiam os padrões de dígitos apresentados nos metadados do dataset.  
+      
     Finalmente, a coluna 'CODIGO_AERONAVE' foi transformada no index do dataframe.'''
     )
 
