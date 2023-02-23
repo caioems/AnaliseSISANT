@@ -130,11 +130,9 @@ _____
 st.markdown('### Pré-processamento dos dados')
 
 st.markdown(
-    '''Para responder a primeira pergunta foi necessário indexar o dataframe. A coluna CODIGO_AERONAVE era ideal para isso, já que teoricamente apresenta valores únicos e padronizados.  
-    
+    '''Inicialmente a tabela foi indexada. A coluna CODIGO_AERONAVE era ideal para esse fim, já que teoricamente apresentava valores únicos e padronizados para cada aeronave do sistema.
     Porém, foram observados valores duplicados na coluna que precisaram ser removidos.'''
     )
-
 
 st.code(
     '''#removendo espaços em branco e duplicatas
@@ -164,6 +162,20 @@ st.markdown(
     Finalmente, a coluna 'CODIGO_AERONAVE' foi transformada no index do dataframe.'''
     )
 
+st.code(
+    '''#checando se os padrões de código seguem os descritos nos metadados e removendo os que não seguirem
+    nrows_before = df.shape[0]
+
+    mask = []
+    for code in df['CODIGO_AERONAVE']:
+        mask.append(bool(match('^(PR|PP|PS)-\d{9}$', code)))
+    df = df[mask]
+
+    nrows_after = df.shape[0]
+
+    #transformando a coluna no index do dataframe:
+    df = df.set_index(df['CODIGO_AERONAVE'])'''
+    )
 #checando se os padrões de código seguem os descritos nos metadados e removendo os que não seguirem
 nrows_before = df.shape[0]
 
@@ -173,8 +185,11 @@ for code in df['CODIGO_AERONAVE']:
 df = df[mask]
 
 nrows_after = df.shape[0]
-print(f'Registros removidos por padrão inválido: {nrows_before - nrows_after}')
-print(f'Quantidade de registros válidos no df: {nrows_after}')
+# print(f'Registros removidos por padrão inválido: {nrows_before - nrows_after}')
+# print(f'Quantidade de registros válidos no df: {nrows_after}')
+
+st.markdown(
+    f'''Registros removidos por padrão inválido: {nrows_before - nrows_after} Quantidade de registros válidos no df: {nrows_after}''')
 
 #transformando a coluna no index do dataframe:
 df = df.set_index(df['CODIGO_AERONAVE'])
