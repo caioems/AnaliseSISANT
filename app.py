@@ -1,22 +1,4 @@
-
-# # Dataset:
-# 
-# Para este projeto foram utilizados dados públicos do Sistema de Aeronaves não Tripuladas (SISANT), um orgão da Agência Nacional de Aviação Civil (ANAC), hospedados no portal [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados), contendo as aeronaves não tripuladas cadastradas em cumprimento ao parágrafo E94.301(b) do [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).
-# 
-# O objetivo deste projeto é fixar métodos e práticas de data analytics utilizando Python. Considerando que os dados são crus, a experiência torna-se mais didática, uma vez que precisarão de pré-processamento.
-# 
-# Assim sendo, pretende-se responder as seguintes perguntas:
-# - Quantos drones estão cadastrados no dataset? Qual o status de cada cadastro?
-# - Quantos diferentes OPERADORes estão cadastrados? Quais suas naturezas?
-# - Qual uso é feito desses drones?
-# - Qual empresa é a maior FABRICANTE? E quais seus os MODELOs mais populares?
-# 
-
-
-# ### Importando módulos:
-
-
-
+### Importando módulos:
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -25,65 +7,124 @@ from re import match
 from wordcloud import WordCloud
 #%matplotlib inline
 
+
+st.write('# Aeronaves no SISANT (ANAC)')
+
+st.markdown('''
+            Para este projeto foram utilizados dados públicos do Sistema de Aeronaves não Tripuladas (SISANT), um orgão da Agência Nacional de Aviação Civil (ANAC), hospedados no portal [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados), contendo as aeronaves não tripuladas cadastradas em cumprimento ao parágrafo E94.301(b) do [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).''')
+ 
+st.markdown('''O objetivo deste projeto é fixar métodos e práticas de data analytics utilizando Python. Considerando que os dados são crus, a experiência torna-se mais didática, uma vez que precisarão de pré-processamento.
+ 
+Assim sendo, pretende-se responder as seguintes perguntas:
+- Quantos drones estão cadastrados no dataset? Qual o status de cada cadastro?
+- Quantos diferentes OPERADORes estão cadastrados? Quais suas naturezas?
+- Qual uso é feito desses drones?
+- Qual empresa é a maior FABRICANTE? E quais seus os MODELOs mais populares?''')
+
+st.code('''
+    #importando bibliotecas
+    import pandas as pd
+    import streamlit as st
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    from re import match
+    from wordcloud import WordCloud''',
+    language='python'
+    )
+
 pd.options.mode.chained_assignment = None
 sns.set_theme(
     style = 'white',
     palette = 'tab10')
 
-st.write('Hello!')
-# ### Carregando e visualizando dados:
+st.code('''
+#carregando dados e visualizando a tabela
+@st.cache_data
+def load_data():
+    url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
 
-url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
+    df = pd.read_csv(
+        url,
+        delimiter=';',
+        skiprows=1,
+        parse_dates=['DATA_VALIDADE'],
+        date_parser=lambda x: pd.to_datetime(x, format=r'%d/%m/%Y')
+        )
+    df.dropna(inplace=True)
+    return df
+    
+df = load_data()
+''')
 
-df = pd.read_csv(
-    url,
-    delimiter=';',
-    skiprows=1,
-    parse_dates=['DATA_VALIDADE'],
-    date_parser=lambda x: pd.to_datetime(x, format=r'%d/%m/%Y')
+#carregando dados e visualizando a tabela
+@st.cache_data
+def load_data():
+    url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
+
+    df = pd.read_csv(
+        url,
+        delimiter=';',
+        skiprows=1,
+        parse_dates=['DATA_VALIDADE'],
+        date_parser=lambda x: pd.to_datetime(x, format=r'%d/%m/%Y')
+        )
+    df.dropna(inplace=True)
+    return df
+    
+df = load_data()
+    
+st.dataframe(
+    df,
+    height=250,
+    use_container_width=True
     )
 
-df.dropna(inplace=True)
-st.write(df)
+st.write('Descrição da tabela:')
+st.dataframe(
+    df.describe(
+        include='all',  
+        datetime_is_numeric=True
+        ),
+    height=150
+    )
 
 
-# ### Metadados do dataset:
-# 
-# - **CODIGO_AERONAVE**: Código da Aeronave. Segue regras:
-#     - Uso Recreativo (AeroMODELO): PR-XXXXXXXXX
-#     - Uso não recreativo básico (RPA Classe 3 operada em linha de visada visual abaixo de 400 pés): PP-XXXXXXXXX
-#     - Uso avançado (RPA Classe 2 e demais Classe 3): PS-XXXXXXXXX  
-# Obs: cada X representa um número 0-9
-# 
-# 
-# 
+st.markdown('''
+### Metadados da tabela:
+
+- **CODIGO_AERONAVE**: Código da Aeronave. Segue regras:
+    - Uso Recreativo (Aeromodelo): PR-XXXXXXXXX;
+    - Uso não recreativo básico (RPA Classe 3 operada em linha de visada visual abaixo de 400 pés): PP-XXXXXXXXX;
+    - Uso avançado (RPA Classe 2 e demais Classe 3): PS-XXXXXXXXX;  
+    - Obs: cada X representa um número 0-9.
+
+- **DATA_VALIDADE**: Data de validade, igual a data em que o cadastro foi feito ou renovado mais 2 (dois) anos.  
+
+- **OPERADOR**: Nome do responsável pela operação do drone.
+
+- **CPF/CNPJ**: Número do CPF ou do CNPJ do responsável pela operação do drone.
+
+- **Tipo de Uso**:
+    - Básico: aeroMODELOs ou RPA Classe 3 operada exclusivamente na linha de visada visual abaixo de 400 pés AGL;
+    - Avançado: RPA Classe 2 ou demais RPA classe 3.
+
+- **FABRICANTE**: Nome do FABRICANTE da aeronave.
+  
+- **MODELO**: Nome do MODELO da aeronave. 
+
+- **Número de serie**: Número de série da aeronave. 
+ 
+- **Peso máximo de decolagem**: Peso máximo de decolagem, numérico, com duas casas decimais, em kg.
+
+- **Ramo de atividade**: 
+    - Recreativo (aeromodelos);
+    - Experimental (aeronave avançada destinada exclusivamente a operações com propósitos experimentais);
+    - Outros ramos de atividade conforme declarado pelo cadastrante.
+''')
 
 
-# - **DATA_VALIDADE**: Data de validade, que é igual a data em que o cadastro foi feito ou renovado mais 2 (dois) anos  
-# - **OPERADOR**: Nome do responsável pela operação do drone  
-# - **CPF/CNPJ**: Número do CPF ou do CNPJ do responsável pela operação do drone
+## Informações sobre as colunas:
 
-
-# - **Tipo de Uso**:
-#     - Básico: aeroMODELOs ou RPA Classe 3 operada exclusivamente na linha de visada visual abaixo de 400 pés AGL
-#     - Avançado: RPA Classe 2 ou demais RPA classe 3
-
-
-# - **FABRICANTE**: Nome do FABRICANTE da aeronave  
-# - **MODELO**: Nome do MODELO da aeronave  
-# - **Número de serie**: Número de série da aeronave  
-# - **Peso máximo de decolagem**: Peso máximo de decolagem, numérico com 2 (duas casas decimais) em kg
-# - **Ramo de atividade**: 
-#     - Recreativo (aeroMODELOs)
-#     - Experimental (aeronave avançada destinada exclusivamente a operações com propósitos experimentais)
-#     - Outros ramos de atividade conforme declarado pelo cadastrante
-
-
-# ## Informações sobre as colunas:
-st.write(df.info())
-
-# %%
-df.describe(include='all', datetime_is_numeric=True)
 
 
 # Para responder a primeira pergunta foi necessário indexar o dataframe. A coluna CODIGO_AERONAVE era ideal para isso, já que teoricamente apresenta valores únicos e padronizados.   
