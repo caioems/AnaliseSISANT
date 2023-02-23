@@ -92,31 +92,31 @@ st.dataframe(
 st.markdown('''
 ### Metadados da tabela:
 
-- **CODIGO_AERONAVE**: Código da Aeronave. Segue regras:
-    - Uso Recreativo (Aeromodelo): PR-XXXXXXXXX;
+- `CODIGO_AERONAVE`: Código da Aeronave. Segue regras:
+    - Uso Recreativo (Aeromodelo): PR-XXXXXXXXX;# %% 
     - Uso não recreativo básico (RPA Classe 3 operada em linha de visada visual abaixo de 400 pés): PP-XXXXXXXXX;
     - Uso avançado (RPA Classe 2 e demais Classe 3): PS-XXXXXXXXX;  
     - Obs: cada X representa um número 0-9.
 
-- **DATA_VALIDADE**: Data de validade, igual a data em que o cadastro foi feito ou renovado mais 2 (dois) anos.  
+- `DATA_VALIDADE`: Data de validade, igual a data em que o cadastro foi feito ou renovado mais 2 (dois) anos.  
 
-- **OPERADOR**: Nome do responsável pela operação do drone.
+- `OPERADOR`: Nome do responsável pela operação do drone.
 
-- **CPF/CNPJ**: Número do CPF ou do CNPJ do responsável pela operação do drone.
+- `CPF/CNPJ`: Número do CPF ou do CNPJ do responsável pela operação do drone.
 
-- **Tipo de Uso**:
+- `Tipo de Uso`:
     - Básico: aeroMODELOs ou RPA Classe 3 operada exclusivamente na linha de visada visual abaixo de 400 pés AGL;
     - Avançado: RPA Classe 2 ou demais RPA classe 3.
 
-- **FABRICANTE**: Nome do FABRICANTE da aeronave.
+- `FABRICANTE`: Nome do FABRICANTE da aeronave.
   
-- **MODELO**: Nome do MODELO da aeronave. 
+- `MODELO`: Nome do MODELO da aeronave. 
 
-- **Número de serie**: Número de série da aeronave. 
+- `Número de serie`: Número de série da aeronave. 
  
-- **Peso máximo de decolagem**: Peso máximo de decolagem, numérico, com duas casas decimais, em kg.
+- `Peso máximo de decolagem`: Peso máximo de decolagem, numérico, com duas casas decimais, em kg.
 
-- **Ramo de atividade**: 
+- `Ramo de atividade`: 
     - Recreativo (aeromodelos);
     - Experimental (aeronave avançada destinada exclusivamente a operações com propósitos experimentais);
     - Outros ramos de atividade conforme declarado pelo cadastrante.
