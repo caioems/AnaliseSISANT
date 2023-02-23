@@ -189,7 +189,9 @@ nrows_after = df.shape[0]
 # print(f'Quantidade de registros válidos no df: {nrows_after}')
 
 st.markdown(
-    f'''Registros removidos por padrão inválido: {nrows_before - nrows_after} Quantidade de registros válidos no df: {nrows_after}''')
+    f'''>Registros removidos por padrão inválido: {nrows_before - nrows_after}
+
+    Quantidade de registros válidos no df: {nrows_after}''')
 
 #transformando a coluna no index do dataframe:
 df = df.set_index(df['CODIGO_AERONAVE'])
