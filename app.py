@@ -80,9 +80,7 @@ st.write(df)
 
 
 # ## Informações sobre as colunas:
-
-# %%
-df.info()
+st.write(df.info())
 
 # %%
 df.describe(include='all', datetime_is_numeric=True)
