@@ -81,15 +81,28 @@ st.dataframe(
     use_container_width=True
     )
 
-st.write('Descrição da tabela:')
-st.dataframe(
-    df.describe(
-        include='all',  
-        datetime_is_numeric=True
-        ),
-    height=150
-    )
+with st.container():
+    import io
+    
+    st.write('>Descrição da tabela:')
+    
+    buffer = io.StringIO()
+    df.info(buf=buffer)
+    info_string = buffer.getvalue()
+    st.code(
+        info_string,
+        language='python'
+        )
+    
+    st.dataframe(
+        df.describe(
+            include='all',  
+            datetime_is_numeric=True
+            ),
+        height=150
+        )
 
+    
 
 st.markdown('''
 ### Metadados da tabela:
@@ -222,17 +235,62 @@ df['CPF_CNPJ'].str.replace(" ", "")
 #convertendo dtype da coluna 'TIPO_USO'
 df['TIPO_USO'] = df['TIPO_USO'].astype('category')
 
-# As colunas 'FABRICANTE' e 'MODELO' precisaram de maior atenção pois, dada a natureza de seu input, apresentam diferentes valores para mesma categoria  
-# Exemplo: 'DJI', 'dji' e 'Dji' representam a mesma FABRICANTE, DJI.
-# 
-# Iniciou-se pela coluna 'FABRICANTE':
+st.markdown(
+'''As colunas `FABRICANTE` e `MODELO` precisaram de maior atenção pois, dada a natureza de seu input, apresentam diferentes valores para mesma categoria  
+Exemplo: 'DJI', 'dji' e 'Dji' representam a mesma fabricante, DJI. Sendo assim, é necessário diminuir a quantidade de categorias da coluna. 
 
-# %%
-#criando função para, dada uma coluna e um dicionário de sinônimos, os nomes sejam substituídos por valores padronizados 
+Iniciou-se pela coluna `FABRICANTE`, sendo que a `MODELO` será transformada posteriormente, pois iremos trabalhar apenas com os modelos fornecidos pela maior fabricante de drones da base de dados.''')
+
+st.code(
+'''#criando função para, dada uma coluna e um dicionário de sinônimos, 
+#os nomes sejam substituídos por valores padronizados 
 def fix_names(column, namemap, df=df):
     for fixed_name, bad_names in namemap.items():
         df.loc[df[column].str.contains(bad_names, regex=True), column] = fixed_name
 
+df['FABRICANTE'] = df['FABRICANTE'].str.lower()
+df['FABRICANTE'] = df['FABRICANTE'].str.strip()
+df['FABRICANTE'] = df['FABRICANTE'].str.replace(" ", "")
+
+#o dicionario foi criado a partir dos valores mais comuns, 
+#porém, dada a alta quantidade de valores únicos, fabricantes de
+#menor expressão e desconhecidos foram agrupados na categoria 'outros'       
+fab_map = {
+    'autelrobotics': 'autel',
+    'c-fly': 'cfly|c-fly',
+    'custom': 'fabrica|aeroMODELO|propria|própria|proprio|próprio|caseiro|montado|artesanal|constru',
+    'dji': 'dji|mavic|phanton|phantom',
+    'flyingcircus': 'circus',
+    'geprc': 'gepr',
+    'highgreat': 'highgreat',
+    'horus': 'horus',
+    'hubsan': 'hubsan|hubsen',
+    'nuvemuav': 'nuvem',
+    'outros': 'outro',
+    'parrot': 'parrot',
+    'phoenixmodel': 'phoenix',
+    'santiago&cintra': 'santiago|cintra',
+    'sensefly': 'sensefly',
+    'shantou': 'shantou',
+    'sjrc': 'sjrc|srjc',
+    'visuo': 'visuo',
+    'x-fly': 'xfly|x-fly',
+    'xiaomi': 'xiaomi|fimi|xiomi',
+    'xmobots': 'xmobots',
+    'zll': 'zll|sg906'
+    }
+
+#transformando nomes de FABRICANTEs
+fix_names('FABRICANTE', fab_map)
+
+df['FABRICANTE'] = df['FABRICANTE'].astype('category')''',
+language='python'
+)
+
+#criando função para, dada uma coluna e um dicionário de sinônimos, os nomes sejam substituídos por valores padronizados 
+def fix_names(column, namemap, df=df):
+    for fixed_name, bad_names in namemap.items():
+        df.loc[df[column].str.contains(bad_names, regex=True), column] = fixed_name
 
 df['FABRICANTE'] = df['FABRICANTE'].str.lower()
 df['FABRICANTE'] = df['FABRICANTE'].str.strip()
@@ -276,12 +334,39 @@ else:
     print('Coluna FABRICANTE: Problema')
 
 
-# Enquanto a próxima coluna, 'MODELO', será transformada posteriormente, pois iremos trabalhar apenas com os MODELOs da maior fornecedora (FABRICANTE) de drones do dataset.
-# 
-# Finalmente, a coluna 'RAMO_ATIVIDADE' também foi validada e transformada. Essa coluna classifica os drones nas categorias Recreativo, Experimental e Outras atividades, sendo essa última categoria especificada livremente pelo usuário.
-# 
 
-# %%
+st.write(
+'''Finalmente, a coluna `RAMO_ATIVIDADE` também foi validada e transformada. Essa coluna classifica os drones nas categorias Recreativo, Experimental e Outras atividades, sendo essa última categoria especificada em forma de texto pelo usuário.'''
+)
+
+st.code(
+'''df['RAMO_ATIVIDADE'] = df['RAMO_ATIVIDADE'].str.lower()
+df['RAMO_ATIVIDADE'] = df['RAMO_ATIVIDADE'].str.strip()
+df['RAMO_ATIVIDADE'] = df['RAMO_ATIVIDADE'].str.replace(" ", "")
+
+#novamente foi criado um dicionário baseado nos valores mais comuns
+#para padronizá-los e reduzir a quantidade de categorias
+act_map = {
+    'educação': 'treinamento|educa|ensin|pesquis',
+    'engenharia': 'pulveriz|aeroagr|agricultura|levantamento|fotograme|prospec|topografia|minera|capta|avalia|mapea|geoproc|engenharia|energia|solar|ambiental|constru|obras|industria|arquitetura|meioambiente',    
+    'foto&cinem': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
+    'logística': 'transport|carga|delivery',
+    'publicidade': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
+    'segurança': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
+    }
+
+#corrigindo nomes a partir do dicionário, reclassificando atividades 
+#mais específicas em 'outros' e convertendo o dtype da coluna
+fix_names('RAMO_ATIVIDADE', act_map, df)
+df.loc[
+    ~df['RAMO_ATIVIDADE'].isin(
+        df['RAMO_ATIVIDADE'].value_counts().head(8).index
+        ), 'RAMO_ATIVIDADE'
+    ] = 'outros'
+df['RAMO_ATIVIDADE'] = df['RAMO_ATIVIDADE'].astype('category')''',
+language='python'
+)
+
 df['RAMO_ATIVIDADE'] = df['RAMO_ATIVIDADE'].str.lower()
 df['RAMO_ATIVIDADE'] = df['RAMO_ATIVIDADE'].str.strip()
 df['RAMO_ATIVIDADE'] = df['RAMO_ATIVIDADE'].str.replace(" ", "")
@@ -305,27 +390,114 @@ df.loc[
     ] = 'outros'
 df['RAMO_ATIVIDADE'] = df['RAMO_ATIVIDADE'].astype('category')
 
-if df['RAMO_ATIVIDADE'].value_counts().sum() == nrows_after:
-    print('Coluna RAMO_ATIVIDADE: OK')
-else:
-    print('Coluna RAMO_ATIVIDADE: Problema')
+st.markdown(
+'Por último, foram removidos da tabela os dados que não seriam utilizados nas análises.'
+)
 
-# %%
-#dropando colunas que não serão utilizadas na análise
+st.code(
+'''#dropando colunas que não serão utilizadas na análise
 df = df.drop(('NUMERO_SERIE'), axis=1)
 df = df.drop(('PESO_MAXIMO_DECOLAGEM_KG'), axis=1)
 
 #conferindo as informações do dataset pré-processado
-df.describe(include='all', datetime_is_numeric=True)
+df.describe(include='all', datetime_is_numeric=True)''')
+
+#dropando colunas que não serão utilizadas na análise
+df = df.drop(('NUMERO_SERIE'), axis=1)
+df = df.drop(('PESO_MAXIMO_DECOLAGEM_KG'), axis=1)
+
+st.markdown('>Versão final da tabela:')
+
+with st.container():
+    import io
+    
+    buffer = io.StringIO()
+    df.info(buf=buffer)
+    info_string = buffer.getvalue()
+    st.code(
+        info_string,
+        language='python'
+        )
+
+    st.dataframe(
+        df.describe(
+            include='all', 
+            datetime_is_numeric=True
+            ),
+        height=150
+    )
+    st.markdown('___')
 
 
-# ## Análise exploratória do dataframe:  
-# 
-# A coluna 'DATA_VALIDADE', como o próprio nome sugere, apresenta as datas em que os cadastros devem ser renovados. Conforme a legislação, sabe-se que o prazo de expiração é de dois anos contados a partir da data de cadastro, e que após seis meses de expiração o cadastro não é mais renovável (torna-se inativo), podemos obter dois tipos de informação a partir dessa coluna:  
-# - A data de adesão da aeronave ao sistema;
-# - Quantos cadastros encontram-se fora do prazo de validade, carecem de renovação ou recadastramento.   
+st.markdown(
+'''### Análise exploratória do dataframe:  
 
-# %%
+A coluna `DATA_VALIDADE`, como o próprio nome sugere, apresenta as datas em que os cadastros devem ser renovados. Conforme a legislação, sabe-se que o prazo de expiração é de dois anos contados a partir da data de cadastro, e que após seis meses de expiração o cadastro não é mais renovável (torna-se inativo), podemos obter dois tipos de informação a partir dessa coluna:  
+- A data de adesão da aeronave ao sistema;
+- Quantos cadastros encontram-se fora do prazo de validade, carecem de renovação ou recadastramento.''')
+
+st.code(
+'''#criando coluna 'DATA_CADASTRO'
+df['DATA_CADASTRO'] = df['DATA_VALIDADE'] - pd.DateOffset(years=2)
+
+#criando função que classifica datas conforme situação do cadastro
+def status_cadastro(date):
+    today = pd.Timestamp.today()
+    if date < today:
+        return 'renovar'
+    elif date + pd.DateOffset(months=6) < today:
+        return 'inativo'
+    return 'ok'
+
+#criando coluna 'STATUS', contendo dados categorizados 
+#sobre cada aeronave (cadastro ok, renovar ou inativo)
+df['STATUS'] = df['DATA_VALIDADE'].apply(status_cadastro)
+df['STATUS'] = df['STATUS'].astype('category')
+
+fig, axs = plt.subplots(1, 2, figsize=(12,6))
+fig.suptitle('Cadastros bimestrais e status do cadastro', weight='bold')
+fig.tight_layout()
+
+#agregando dados em bimestres
+agg_data = df.resample('M', on='DATA_CADASTRO').count()
+agg_data.reset_index(inplace=True)
+
+#criando gráfico 1
+sns.lineplot(
+    agg_data,
+    x='DATA_CADASTRO', 
+    y='OPERADOR',     
+    ax=axs[0]
+    )
+
+axs[0].grid(axis='x', linestyle='--')
+axs[0].yaxis.grid(False)
+
+#xmin, xmax = cad_count.get_xlim()
+#xticks = np.linspace(xmin, xmax, 5)
+axs[0].set(
+    xticks=['2020-12-31', '2021-12-31', '2022-12-31', '2022-12-31'], 
+    ylabel=None, 
+    xlabel='Data de cadastro',
+    )
+
+#criando gráfico 2
+sns.countplot(
+    df, 
+    y='STATUS',
+    order=df['STATUS'].value_counts().iloc[:3].index, 
+    ax=axs[1]
+    )
+axs[1].set(
+    xlabel='Qtd. cadastros',
+    ylabel=None,
+    )
+
+sns.despine(ax=axs[0])
+sns.despine(ax=axs[1])''',
+language='python'
+)
+
 #criando coluna 'DATA_CADASTRO'
 df['DATA_CADASTRO'] = df['DATA_VALIDADE'] - pd.DateOffset(years=2)
 
@@ -341,11 +513,6 @@ def status_cadastro(date):
 #criando coluna 'STATUS', contendo dados categorizados sobre cada aeronave (cadastro ok, renovar ou inativo)
 df['STATUS'] = df['DATA_VALIDADE'].apply(status_cadastro)
 df['STATUS'] = df['STATUS'].astype('category')
-
-#calculando valores e criando gráfico
-num_inat = df[df['STATUS']=='inativo'].shape[0]
-num_renov = df[df['STATUS']=='renovar'].shape[0]
-num_ok = df[df['STATUS']=='ok'].shape[0]
 
 fig, axs = plt.subplots(1, 2, figsize=(12,6))
 fig.suptitle('Cadastros bimestrais e status do cadastro', weight='bold')
@@ -389,7 +556,17 @@ axs[1].set(
 sns.despine(ax=axs[0])
 sns.despine(ax=axs[1])
 
-print(f'Foram verificados {df.shape[0]} cadastros, sendo {num_inat} inativos ({round(num_inat / df.shape[0] * 100, ndigits=1)}%), {num_renov} a serem renovados ({round(num_renov / df.shape[0] * 100, ndigits=1)}%) e {num_ok} regulares ({round(num_ok / df.shape[0] * 100, ndigits=1)}%).')
+#calculando valores e criando gráfico
+num_inat = df[df['STATUS']=='inativo'].shape[0]
+num_renov = df[df['STATUS']=='renovar'].shape[0]
+num_ok = df[df['STATUS']=='ok'].shape[0]
+
+st.markdown(
+f'''>Foram verificados {df.shape[0]} cadastros, sendo {num_inat} inativos ({round(num_inat / df.shape[0] * 100, ndigits=1)}%), {num_renov} a serem renovados ({round(num_renov / df.shape[0] * 100, ndigits=1)}%) e {num_ok} regulares ({round(num_ok / df.shape[0] * 100, ndigits=1)}%).''')
+
+st.pyplot(fig)
+
+# print(f'Foram verificados {df.shape[0]} cadastros, sendo {num_inat} inativos ({round(num_inat / df.shape[0] * 100, ndigits=1)}%), {num_renov} a serem renovados ({round(num_renov / df.shape[0] * 100, ndigits=1)}%) e {num_ok} regulares ({round(num_ok / df.shape[0] * 100, ndigits=1)}%).')
 
 
 # Observou-se que a taxa de adesão de aeronaves ao sistema vem crescendo a cada mês, apesar da queda recente na quantidade de cadastros.
