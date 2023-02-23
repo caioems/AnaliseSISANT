@@ -125,8 +125,7 @@ st.markdown('''
 st.markdown('### Pré-processamento dos dados')
 
 st.markdown(
-    '''Para responder a primeira pergunta foi necessário indexar o dataframe. A coluna CODIGO_AERONAVE era ideal para isso, já que teoricamente apresenta valores únicos e padronizados.
-       
+    '''Para responder a primeira pergunta foi necessário indexar o dataframe. A coluna CODIGO_AERONAVE era ideal para isso, já que teoricamente apresenta valores únicos e padronizados.  
     Porém, foram observados valores duplicados na coluna que precisaram ser removidos.'''
     )
 
@@ -137,7 +136,8 @@ st.code(
     df['CODIGO_AERONAVE'] = df['CODIGO_AERONAVE'].str.replace(" ", "")
     
     #removendo duplicatas
-    df = df.drop_duplicates(subset=['CODIGO_AERONAVE'], keep='first')'''
+    df = df.drop_duplicates(subset=['CODIGO_AERONAVE'], keep='first')''',
+    language='python'
     )
 
 #removendo possíveis espaços em branco
