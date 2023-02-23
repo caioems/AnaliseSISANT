@@ -104,7 +104,7 @@ st.markdown('''
 
 - `CPF/CNPJ`: Número do CPF ou do CNPJ do responsável pela operação do drone.
 
-- `Tipo de Uso`:
+- `TIPO_USO`:
     - Básico: aeroMODELOs ou RPA Classe 3 operada exclusivamente na linha de visada visual abaixo de 400 pés AGL;
     - Avançado: RPA Classe 2 ou demais RPA classe 3.
 
@@ -112,9 +112,9 @@ st.markdown('''
   
 - `MODELO`: Nome do MODELO da aeronave. 
 
-- `Número de serie`: Número de série da aeronave. 
+- `NUMERO_SERIE`: Número de série da aeronave. 
  
-- `Peso máximo de decolagem`: Peso máximo de decolagem, numérico, com duas casas decimais, em kg.
+- `PESO_MAXIMO_DECOLAGEM_KG`: Peso máximo de decolagem, numérico, com duas casas decimais, em kilogramas.
 
 - `Ramo de atividade`: 
     - Recreativo (aeromodelos);
