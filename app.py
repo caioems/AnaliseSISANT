@@ -19,7 +19,10 @@ Assim sendo, pretende-se responder as seguintes perguntas:
 - Quantos drones estão cadastrados no dataset? Qual o status de cada cadastro?
 - Quantos diferentes OPERADORes estão cadastrados? Quais suas naturezas?
 - Qual uso é feito desses drones?
-- Qual empresa é a maior FABRICANTE? E quais seus os MODELOs mais populares?''')
+- Qual empresa é a maior FABRICANTE? E quais seus os MODELOs mais populares?
+
+_____'''
+)
 
 st.code('''
     #importando bibliotecas
@@ -120,6 +123,8 @@ st.markdown('''
     - Recreativo (aeromodelos);
     - Experimental (aeronave avançada destinada exclusivamente a operações com propósitos experimentais);
     - Outros ramos de atividade conforme declarado pelo cadastrante.
+    
+_____
 ''')
 
 st.markdown('### Pré-processamento dos dados')
