@@ -454,15 +454,16 @@ def status_cadastro(date):
 df['STATUS'] = df['DATA_VALIDADE'].apply(status_cadastro)
 df['STATUS'] = df['STATUS'].astype('category')
 
+#agregando dados por mês
+agg_data = df.resample('M', on='DATA_CADASTRO').count()
+agg_data.reset_index(inplace=True)
+
+#configurando figure e os axes
 fig, axs = plt.subplots(1, 2, figsize=(12,6))
 fig.suptitle('Cadastros bimestrais e status do cadastro', weight='bold')
 fig.tight_layout()
 
-#agregando dados em bimestres
-agg_data = df.resample('M', on='DATA_CADASTRO').count()
-agg_data.reset_index(inplace=True)
-
-#criando gráfico 1
+#criando o gráfico de linha
 sns.lineplot(
     agg_data,
     x='DATA_CADASTRO', 
@@ -470,30 +471,29 @@ sns.lineplot(
     ax=axs[0]
     )
 
+#configurando atributos do gráfico de linhas
 axs[0].grid(axis='x', linestyle='--')
 axs[0].yaxis.grid(False)
-
-#xmin, xmax = cad_count.get_xlim()
-#xticks = np.linspace(xmin, xmax, 5)
 axs[0].set(
     xticks=['2020-12-31', '2021-12-31', '2022-12-31', '2022-12-31'], 
     ylabel=None, 
     xlabel='Data de cadastro',
     )
+sns.despine(ax=axs[0])
 
-#criando gráfico 2
+#criando o gráfico de barras
 sns.countplot(
     df, 
     y='STATUS',
     order=df['STATUS'].value_counts().iloc[:3].index, 
     ax=axs[1]
     )
+
+#configurando atributos do gráfico de barras
 axs[1].set(
     xlabel='Qtd. cadastros',
     ylabel=None,
     )
-
-sns.despine(ax=axs[0])
 sns.despine(ax=axs[1])''',
 language='python'
 )
@@ -514,15 +514,16 @@ def status_cadastro(date):
 df['STATUS'] = df['DATA_VALIDADE'].apply(status_cadastro)
 df['STATUS'] = df['STATUS'].astype('category')
 
+#agregando dados por mês
+agg_data = df.resample('M', on='DATA_CADASTRO').count()
+agg_data.reset_index(inplace=True)
+
+#configurando figure e os axes
 fig, axs = plt.subplots(1, 2, figsize=(12,6))
 fig.suptitle('Cadastros bimestrais e status do cadastro', weight='bold')
 fig.tight_layout()
 
-#agregando dados em bimestres
-agg_data = df.resample('M', on='DATA_CADASTRO').count()
-agg_data.reset_index(inplace=True)
-
-#criando gráfico 1
+#criando o gráfico de linha
 sns.lineplot(
     agg_data,
     x='DATA_CADASTRO', 
@@ -530,33 +531,32 @@ sns.lineplot(
     ax=axs[0]
     )
 
+#configurando atributos do gráfico de linhas
 axs[0].grid(axis='x', linestyle='--')
 axs[0].yaxis.grid(False)
-
-#xmin, xmax = cad_count.get_xlim()
-#xticks = np.linspace(xmin, xmax, 5)
 axs[0].set(
     xticks=['2020-12-31', '2021-12-31', '2022-12-31', '2022-12-31'], 
     ylabel=None, 
     xlabel='Data de cadastro',
     )
+sns.despine(ax=axs[0])
 
-#criando gráfico 2
+#criando o gráfico de barras
 sns.countplot(
     df, 
     y='STATUS',
     order=df['STATUS'].value_counts().iloc[:3].index, 
     ax=axs[1]
     )
+
+#configurando atributos do gráfico de barras
 axs[1].set(
     xlabel='Qtd. cadastros',
     ylabel=None,
     )
-
-sns.despine(ax=axs[0])
 sns.despine(ax=axs[1])
 
-#calculando valores e criando gráfico
+#calculando numero de aeronaves em cada categoria
 num_inat = df[df['STATUS']=='inativo'].shape[0]
 num_renov = df[df['STATUS']=='renovar'].shape[0]
 num_ok = df[df['STATUS']=='ok'].shape[0]
