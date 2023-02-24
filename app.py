@@ -562,20 +562,36 @@ num_renov = df[df['STATUS']=='renovar'].shape[0]
 num_ok = df[df['STATUS']=='ok'].shape[0]
 
 st.markdown(
-f'''>Foram verificados {df.shape[0]} cadastros, sendo {num_inat} inativos ({round(num_inat / df.shape[0] * 100, ndigits=1)}%), {num_renov} a serem renovados ({round(num_renov / df.shape[0] * 100, ndigits=1)}%) e {num_ok} regulares ({round(num_ok / df.shape[0] * 100, ndigits=1)}%).''')
+f'''>De forma geral, observou-se que a taxa de adesão de aeronaves ao sistema vem crescendo a cada mês. E do total de cadastros verificados ({df.shape[0]}), {num_inat} ({round(num_inat / df.shape[0] * 100, ndigits=1)}%) estão inativos, {num_renov} ({round(num_renov / df.shape[0] * 100, ndigits=1)}%) precisam ser renovados  e {num_ok} ({round(num_ok / df.shape[0] * 100, ndigits=1)}%) estão regularizados.''')
 
 st.pyplot(fig)
 
-# print(f'Foram verificados {df.shape[0]} cadastros, sendo {num_inat} inativos ({round(num_inat / df.shape[0] * 100, ndigits=1)}%), {num_renov} a serem renovados ({round(num_renov / df.shape[0] * 100, ndigits=1)}%) e {num_ok} regulares ({round(num_ok / df.shape[0] * 100, ndigits=1)}%).')
+ 
+st.markdown(
+'''Antes de analisar a coluna `OPERADOR` é preciso confrontar os dados com a coluna `CPF_CNPJ`, uma vez que os valores da última são únicos. A coluna `OPERADOR` contém input de texto humano e, em múltiplos registros, foram encontrados diferentes nomes para o mesmo CPF/CNPJ. 
+ 
+Foi ainda criada uma coluna chamada `NATUREZA_OP` contendo a classificação do operador entre pessoa física (PF) ou jurídica (PJ). É importante mencionar que os valores relacionados ao CPF fornecidos pelo sistema são parcialmente censurados, visando a preservação de dados pessoais.''')
 
+st.code(
+'''#agrupando dados pela coluna CPF_CNPJ, sendo que os possíveis 
+#valores para a coluna OPERADOR foram enviados para uma lista
+op_group = df.groupby('CPF_CNPJ')['OPERADOR'].apply(list).to_dict()
 
-# Observou-se que a taxa de adesão de aeronaves ao sistema vem crescendo a cada mês, apesar da queda recente na quantidade de cadastros.
-# 
-# Antes de analisar a coluna OPERADOR é preciso confrontar os dados com a coluna 'CPF_CNPJ', uma vez que os valores da última são únicos. A coluna 'OPERADOR' contém input de texto humano e, em múltiplos registros, foram encontrados diferentes nomes para o mesmo CPF/CNPJ. 
-#  
-# Foi ainda criada uma coluna chamada 'NATUREZA_OP' contendo a classificação entre pessoa física (PF) ou jurídica (PJ). É importante mencionar que os valores relacionados ao CPF fornecidos pelo dataset são parcialmente censurados, visando a preservação de dados pessoais.
+#criando mapa no formato de dicionário onde o valor de CPF_CNPJ será a chave 
+#e o primeiro valor da lista de operadores será o nome padrão 
+op_dict = {k: v[0] for k, v in op_group.items()}
 
-# %%
+#substituindo valores antigos da coluna OPERADOR pelos nomes corrigidos
+unique_ops1 = len(df['OPERADOR'].unique())
+df['OPERADOR'] = df['CPF_CNPJ'].map(op_dict)
+unique_ops2 = len(df['OPERADOR'].unique())
+
+#criando coluna NATUREZA_OP contendo classificação dos operadores entre pessoa física ou jurídica
+df['NATUREZA_OP'] = df['CPF_CNPJ'].apply(
+    lambda x: 'PF' if x.startswith('CPF') else 'PJ'
+    ).astype('category')''',
+    language='python')
+
 #agrupando dados pela coluna de valores únicos CPF_CNPJ, sendo que os respectivos valores para a coluna OPERADOR foram enviados para uma lista
 op_group = df.groupby('CPF_CNPJ')['OPERADOR'].apply(list).to_dict()
 
@@ -587,52 +603,115 @@ unique_ops1 = len(df['OPERADOR'].unique())
 df['OPERADOR'] = df['CPF_CNPJ'].map(op_dict)
 unique_ops2 = len(df['OPERADOR'].unique())
 
-print(f'A coluna OPERADOR teve {unique_ops1 - unique_ops2} nomes corrigidos.')
-
 #criando coluna NATUREZA_OP contendo classificação dos operadores entre pessoa física ou jurídica
 df['NATUREZA_OP'] = df['CPF_CNPJ'].apply(
     lambda x: 'PF' if x.startswith('CPF') else 'PJ'
     ).astype('category')
-    
 
-# %%
+st.markdown(f'>A coluna `OPERADOR` teve {unique_ops1 - unique_ops2} nomes corrigidos.')
+
+st.code(
+'''#criando figure e axis    
 fig, ax = plt.subplots(figsize=(6,6))
 fig.tight_layout(pad=2)
 fig.suptitle(
     'Distribuição das aeronaves conforme o tipo de uso', 
     weight='bold')
 
+#criando gráfico de pizza
 ax.pie(
     df['TIPO_USO'].value_counts(),  
     autopct='%1.1f%%', 
     startangle=315
     )
 
-# draw circle
+#criando um círculo branco centralizado
 centre_circle = plt.Circle((0,0),0.70,fc='white')
 fig.gca().add_artist(centre_circle)
 
+#configurando atributos do gráfico
+ax.axis('equal')    
+sns.despine(ax=ax)
+
+#adicionando legenda
+fig.legend(
+    labels = df['TIPO_USO'].value_counts().index.tolist(), 
+    loc = 'lower right'
+    )''',
+    language='python'
+    )
+
+#criando figure e axis    
+fig, ax = plt.subplots(figsize=(6,6))
+fig.tight_layout(pad=2)
+fig.suptitle(
+    'Distribuição das aeronaves conforme o tipo de uso', 
+    weight='bold')
+
+#criando gráfico de pizza
+ax.pie(
+    df['TIPO_USO'].value_counts(),  
+    autopct='%1.1f%%', 
+    startangle=315
+    )
+
+#criando um círculo branco centralizado
+centre_circle = plt.Circle((0,0),0.70,fc='white')
+fig.gca().add_artist(centre_circle)
+
+#configurando atributos do gráfico
+ax.axis('equal')    
+sns.despine(ax=ax)
+
+#adicionando legenda
 fig.legend(
     labels = df['TIPO_USO'].value_counts().index.tolist(), 
     loc = 'lower right'
     )
 
-# Equal aspect ratio ensures that pie is drawn as a circle
-ax.axis('equal')    
-sns.despine(ax=ax)
+percentage = df['TIPO_USO'].value_counts() / df['TIPO_USO'].value_counts().sum()
+st.markdown(f'>O tipo de uso mais frequente é o {percentage.index[0]}, registrado em {round(percentage[0] * 100, 1)}% dos registros.') 
 
-percentage = df['TIPO_USO'].value_counts() / df['TIPO_USO'].value_counts().sum()    
-print(f'O tipo de uso mais frequente é o basico, registrado em {round(percentage[0] * 100, 1)}% dos registros.')
+st.pyplot(fig)
 
+st.markdown(
+'''Para avançar no entendimento do uso das aeronaves, avaliou-se então a coluna `RAMO_ATIVIDADE`. Primeiramente, observou-se que a grande maioria dos drones registrados são destinados a atividades recreativas, sendo as atividades de 'fotografia e cinema' e 'engenharia' vindo logo após.
 
-# Para avançar no entendimento do uso das aeronaves, avaliou-se então a coluna RAMO_ATIVIDADE. Primeiramente, observou-se que a grande maioria dos drones registrados são destinados a atividades recreativas, sendo as atividades de 'fotografia e cinema' e 'engenharia' vindo logo após.
-# 
-# Adicionalmente esses números ainda foram comparados com a coluna NATUREZA_OP, onde verificou-se que as pessoas físicas são maioria em quase todas as atividades, com exceção da engenharia e da segurança.
+Adicionalmente esses números ainda foram comparados com a coluna `NATUREZA_OP`, onde verificou-se que as pessoas físicas são maioria em quase todas as atividades, com exceção da engenharia e da segurança.'''
+)
 
-# %%
+st.code(
+'''fig, ax = plt.subplots(figsize = (12,6))
+fig.tight_layout(pad=2)
+fig.suptitle(
+    'Distribuição das aeronaves conforme os ramos de atividade no SISANT', 
+    weight = 'bold'
+    )
+
+ax = sns.countplot(
+    df, 
+    y = 'RAMO_ATIVIDADE', 
+    hue = 'NATUREZA_OP',
+    order = df['RAMO_ATIVIDADE'].value_counts().iloc[:10].index
+    )
+
+ax.grid(axis = 'x', linestyle = '--')
+ax.yaxis.grid(False)
+ax.set(xlabel = None, ylabel = None)
+ax.legend(
+    loc = 'lower right',
+    labels = ['Pessoas físicas', 'Pessoas jurídicas']
+    )
+
+sns.despine(ax=ax)'''
+)
+
 fig, ax = plt.subplots(figsize = (12,6))
 fig.tight_layout(pad=2)
-fig.suptitle('Distribuição das aeronaves conforme os ramos de atividade no SISANT', weight = 'bold')
+fig.suptitle(
+    'Distribuição das aeronaves conforme os ramos de atividade no SISANT', 
+    weight = 'bold'
+    )
 
 ax = sns.countplot(
     df, 
@@ -651,16 +730,24 @@ ax.legend(
 
 sns.despine(ax=ax)
 
+st.pyplot(fig)
 
-# Depois analisou-se a questão dos FABRICANTEs e MODELOs de drone. Quanto aos FABRICANTEs, foi observada a dominância da FABRICANTE DJI,
+st.markdown(
+'''Por fim, foram analisadas as questões relativas aos fabricantes e seus modelos de aeronaves. Primeiro utilizou-se um gráfico em formato "word cloud"(que basicamente exibe palavras de acordo com sua frequência (quanto maior a frequência, maior a palavra)) para visualizar a distribuição das fabricantes.'''
+)
 
-# %%
-#criando nuvem de palavras para representar a distribuição das FABRICANTEs
+st.code(
+'''#criando estrutura do gráfico
 fig, ax = plt.subplots(figsize=(12,6))
 
+#alterando atributos da figure
 fig.tight_layout(pad=2)
-fig.suptitle('Principais FABRICANTEs das aeronaves no SISANT', weight='bold')
+fig.suptitle(
+    'Principais FABRICANTEs das aeronaves no SISANT', 
+    weight='bold'
+    )
 
+#criando grafico word cloud para representar a frequência das fabricantes
 wordcloud = WordCloud(
     width=1200, height=600,
     mode='RGBA', 
@@ -671,32 +758,62 @@ wordcloud = WordCloud(
         df['FABRICANTE'].value_counts().to_dict()
         )
 
+#alterando atributos do axis
 ax.axis("off")
-ax.imshow(wordcloud, interpolation='bilinear') 
+ax.imshow(wordcloud, interpolation='bilinear')''',
+language='python'
+)
+
+#criando estrutura do gráfico
+fig, ax = plt.subplots(figsize=(12,6))
+
+#alterando atributos da figure
+fig.tight_layout(pad=2)
+fig.suptitle(
+    'Principais fabricantes das aeronaves no SISANT', 
+    weight='bold'
+    )
+
+#criando grafico word cloud para representar a frequência das fabricantes
+wordcloud = WordCloud(
+    width=1200, height=600,
+    mode='RGBA', 
+    background_color='white',
+    #min_font_size=15,
+    colormap='tab10'
+    ).fit_words(
+        df['FABRICANTE'].value_counts().to_dict()
+        )
+
+#alterando atributos do axis
+ax.axis("off")
+ax.imshow(wordcloud, interpolation='bilinear')
 
 
 counts = df['FABRICANTE'].value_counts()
 percentages = counts / counts.sum()
 percentages = percentages.apply(
-    lambda x: f'{round(x * 100, 1)}%'
+    lambda x: f'{round(x * 100, 1)}'
     )
 
-print(f'A maior fornecedora é {percentages.index[0].upper()}, constando em {percentages[0]} dos registros')
+st.pyplot(fig)
 
-print(percentages.head(10))
+st.markdown(f'>A maior fornecedora é {percentages.index[0].upper()}, com frequência de {percentages[0]}%.')
 
+st.write(percentages.head(5))
 
-# Foram então verificados quais os principais MODELOs de aeronaves DJI registrados no dataset.
+st.markdown('Foram então verificados quais os principais modelos de aeronaves fornecidas pela DJI nos dados do sistema. Para isso, a coluna `MODELO` foi finalmente pré-processada.')
 
-# %%
-#criando subset contendo os drones fabricados pela dji
+st.code(
+'''#criando subset contendo os drones fabricados pela dji
 dji_df = df.loc[df['FABRICANTE']=='dji']
 
-#transformando os nomes
+#removendo espaços em branco
 dji_df['MODELO'] = dji_df['MODELO'].str.lower()
 dji_df['MODELO'] = dji_df['MODELO'].str.strip()
 dji_df['MODELO'] = dji_df['MODELO'].str.replace(" ", "")
 
+#criando dicionário de modelos
 dji_model_map = {
     'mavic': 'mav|air|ma2ue3w|m1p|da2sue1|1ss5|u11x|rc231|m2e|l1p|enterprisedual',
     'phantom': 'phan|wm331a|p4p|w322b|p4mult|w323|wm332a|hanto',
@@ -711,28 +828,101 @@ dji_model_map = {
     'outros': 'dji'
     }
 
-#transformando nomes de FABRICANTEs
+#novamente utilizando a função fix_names, dessa vez com argumentos
+#relativos a coluna MODELO
 fix_names('MODELO', dji_model_map, dji_df)
+
+#renomeando modelos não reconhecidos como "outros"
 dji_df.loc[~dji_df['MODELO'].isin(dji_df['MODELO'].value_counts().head(14).index), 'MODELO'] = 'outros'
+
 dji_df['MODELO'] = dji_df['MODELO'].astype('category')
 
-
+#criando estrutura para o gráfico
 fig, ax = plt.subplots(figsize=(12,6))
 fig.tight_layout(pad=2)
-fig.suptitle('Distribuição dos MODELOs de aeronave fabricadas pela DJI no SISANT')
+fig.suptitle(
+    'Distribuição dos modelos de aeronave fabricadas pela DJI no SISANT',
+    weight='bold'
+    )
 
+#criando gráfico de barras
 sns.countplot(
     y = dji_df['MODELO'],
     order = dji_df['MODELO'].value_counts().iloc[:10].index,
     ax=ax
     )
 
+#adicionando grid
 ax.grid(
     axis='x', 
     linestyle='--'
     )
 #ax.yaxis.grid(False)
 
+#alterando atributos do gráfico de barras
+ax.set(
+    xlabel=None,
+    ylabel=None,
+)
+sns.despine(ax=ax)''',
+language='python'
+)
+
+#criando subset contendo os drones fabricados pela dji
+dji_df = df.loc[df['FABRICANTE']=='dji']
+
+#removendo espaços em branco
+dji_df['MODELO'] = dji_df['MODELO'].str.lower()
+dji_df['MODELO'] = dji_df['MODELO'].str.strip()
+dji_df['MODELO'] = dji_df['MODELO'].str.replace(" ", "")
+
+#criando dicionário de modelos
+dji_model_map = {
+    'mavic': 'mav|air|ma2ue3w|m1p|da2sue1|1ss5|u11x|rc231|m2e|l1p|enterprisedual',
+    'phantom': 'phan|wm331a|p4p|w322b|p4mult|w323|wm332a|hanto',
+    'mini': 'min|mt2pd|mt2ss5|djimi|mt3m3vd',
+    'spark': 'spa|mm1a',
+    'matrice': 'matrice|m300',
+    'avata': 'avata|qf2w4k',
+    'inspire': 'inspire',
+    'tello': 'tello|tlw004',
+    'agras': 'agras|mg-1p|mg1p|t16|t10|t40|3wwdz',
+    'fpv': 'fpv',
+    'outros': 'dji'
+    }
+
+#novamente utilizando a função fix_names, dessa vez com argumentos
+#relativos a coluna MODELO
+fix_names('MODELO', dji_model_map, dji_df)
+
+#renomeando modelos não reconhecidos como "outros"
+dji_df.loc[~dji_df['MODELO'].isin(dji_df['MODELO'].value_counts().head(14).index), 'MODELO'] = 'outros'
+
+dji_df['MODELO'] = dji_df['MODELO'].astype('category')
+
+#criando estrutura para o gráfico
+fig, ax = plt.subplots(figsize=(12,6))
+fig.tight_layout(pad=2)
+fig.suptitle(
+    'Distribuição dos MODELOs de aeronave fabricadas pela DJI no SISANT',
+    weight='bold'
+    )
+
+#criando gráfico de barras
+sns.countplot(
+    y = dji_df['MODELO'],
+    order = dji_df['MODELO'].value_counts().iloc[:10].index,
+    ax=ax
+    )
+
+#adicionando grid
+ax.grid(
+    axis='x', 
+    linestyle='--'
+    )
+#ax.yaxis.grid(False)
+
+#alterando atributos do gráfico de barras
 ax.set(
     xlabel=None,
     ylabel=None,
@@ -740,24 +930,33 @@ ax.set(
 
 sns.despine(ax=ax)
 
+st.pyplot(fig)
 
 
-# Quais as marcas preferidas dos PF e dos PJ?
 
-# %%
+st.markdown('Quais as marcas preferidas dos PF e dos PJ?')
+
+st.code(
+'''#criando subsets baseados na coluna NATUREZA_OP
 pf_df = df.loc[df['NATUREZA_OP']=='PF', 'FABRICANTE']
 pj_df = df.loc[df['NATUREZA_OP']=='PJ', 'FABRICANTE']
 
+#criando estrutura dos gráficos
 fig, axs = plt.subplots(1, 2, figsize=(12,6), sharey=True)
-fig.suptitle('Distribuição das FABRICANTEs de aeronaves conforme a natureza jurídica do OPERADOR', weight='bold')
+fig.suptitle(
+    'Distribuição das FABRICANTEs de aeronaves conforme a natureza jurídica do OPERADOR', 
+    weight='bold'
+    )
 fig.tight_layout(pad=2)
 
+#criando gráfico de barras 1 (pessoas físicas)
 sns.countplot(
     x=pf_df, 
     order=pf_df.value_counts().iloc[:7].index, 
     ax=axs[0]
     )
 
+#adicionando labels contendo seu respectivo valor a cada uma das barras
 for bar in axs[0].patches:
     height = bar.get_height()
     axs[0].annotate(
@@ -766,7 +965,8 @@ for bar in axs[0].patches:
         ha='center',
         va='bottom'
         )
-   
+
+#alterando atributos do gráfico 1   
 axs[0].set(
     xlabel=None, 
     ylabel=None,
@@ -774,13 +974,15 @@ axs[0].set(
     )
 
 sns.despine(ax=axs[0])
-    
+
+#criando gráfico de barras 2 (pessoas jurídicas)    
 sns.countplot(
     x=pj_df, 
     order=pj_df.value_counts().iloc[:7].index, 
     ax=axs[1]
     )
 
+#adicionando labels
 for bar in axs[1].patches:
     height = bar.get_height()
     axs[1].annotate(
@@ -790,6 +992,73 @@ for bar in axs[1].patches:
         va='bottom'
         )
 
+#alterando atributos do gráfico 2
+axs[1].set(
+    xlabel=None, 
+    ylabel=None,
+    title='PJ'
+    )
+
+sns.despine(ax=axs[1])''',
+language='python'
+)
+
+#criando subsets baseados na coluna NATUREZA_OP
+pf_df = df.loc[df['NATUREZA_OP']=='PF', 'FABRICANTE']
+pj_df = df.loc[df['NATUREZA_OP']=='PJ', 'FABRICANTE']
+
+#criando estrutura dos gráficos
+fig, axs = plt.subplots(1, 2, figsize=(12,6), sharey=True)
+fig.suptitle(
+    'Distribuição das fabricantes de aeronaves conforme natureza jurídica', 
+    weight='bold'
+    )
+fig.tight_layout(pad=2)
+
+#criando gráfico de barras 1 (pessoas físicas)
+sns.countplot(
+    x=pf_df, 
+    order=pf_df.value_counts().iloc[:7].index, 
+    ax=axs[0]
+    )
+
+#adicionando labels contendo seu respectivo valor a cada uma das barras
+for bar in axs[0].patches:
+    height = bar.get_height()
+    axs[0].annotate(
+        text=f"{int(height)}", 
+        xy=(bar.get_x() + bar.get_width() / 2, height),
+        ha='center',
+        va='bottom'
+        )
+
+#alterando atributos do gráfico 1   
+axs[0].set(
+    xlabel=None, 
+    ylabel=None,
+    title='PF'
+    )
+
+sns.despine(ax=axs[0])
+
+#criando gráfico de barras 2 (pessoas jurídicas)    
+sns.countplot(
+    x=pj_df, 
+    order=pj_df.value_counts().iloc[:7].index, 
+    ax=axs[1]
+    )
+
+#adicionando labels
+for bar in axs[1].patches:
+    height = bar.get_height()
+    axs[1].annotate(
+        text=f"{int(height)}", 
+        xy=(bar.get_x() + bar.get_width() / 2, height),
+        ha='center', 
+        va='bottom'
+        )
+
+#alterando atributos do gráfico 2
 axs[1].set(
     xlabel=None, 
     ylabel=None,
@@ -797,6 +1066,8 @@ axs[1].set(
     )
 
 sns.despine(ax=axs[1])
+
+st.pyplot(fig)
 
 
 
