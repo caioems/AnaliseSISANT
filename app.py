@@ -5,12 +5,23 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from re import match
 from wordcloud import WordCloud
-#%matplotlib inline
 
+with open('style.css') as css:
+    st.markdown(
+        '<style>{}</style>'.format(
+            css.read()
+        ),
+        unsafe_allow_html=True
+    )
 
-st.markdown('# Aeronaves no SISANT (ANAC)')
+st.markdown(
+'<div class="header"><h1>Aeronaves no SISANT (ANAC)</h1></div>',
+unsafe_allow_html=True
+)
 
-st.markdown('''Para este projeto foram utilizados dados públicos do Sistema de Aeronaves não Tripuladas (SISANT), um orgão da Agência Nacional de Aviação Civil (ANAC), hospedados no portal [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados), contendo as aeronaves não tripuladas cadastradas em cumprimento ao parágrafo E94.301(b) do [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).''')
+st.markdown(
+'''Para este projeto foram utilizados dados públicos do Sistema de Aeronaves não Tripuladas (SISANT), um orgão da Agência Nacional de Aviação Civil (ANAC), hospedados no portal [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados), contendo as aeronaves não tripuladas cadastradas em cumprimento ao parágrafo E94.301(b) do [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).'''
+)
  
 st.markdown('''O objetivo deste projeto é fixar métodos e práticas de data analytics utilizando Python. Considerando que os dados são crus, a experiência torna-se mais didática, uma vez que precisarão de pré-processamento.''')
  
@@ -688,11 +699,12 @@ fig.suptitle(
     weight = 'bold'
     )
 
-ax = sns.countplot(
+sns.countplot(
     df, 
     y = 'RAMO_ATIVIDADE', 
     hue = 'NATUREZA_OP',
-    order = df['RAMO_ATIVIDADE'].value_counts().iloc[:10].index
+    order = df['RAMO_ATIVIDADE'].value_counts().iloc[:10].index,
+    ax=ax
     )
 
 ax.grid(axis = 'x', linestyle = '--')
@@ -713,16 +725,22 @@ fig.suptitle(
     weight = 'bold'
     )
 
-ax = sns.countplot(
+sns.countplot(
     df, 
     y = 'RAMO_ATIVIDADE', 
     hue = 'NATUREZA_OP',
-    order = df['RAMO_ATIVIDADE'].value_counts().iloc[:10].index
+    order = df['RAMO_ATIVIDADE'].value_counts().iloc[:10].index,
+    ax=ax
     )
 
 ax.grid(axis = 'x', linestyle = '--')
-ax.yaxis.grid(False)
-ax.set(xlabel = None, ylabel = None)
+#ax.yaxis.grid(False)
+
+ax.set(
+    xlabel = None, 
+    ylabel = None
+    )
+
 ax.legend(
     loc = 'lower right',
     labels = ['Pessoas físicas', 'Pessoas jurídicas']
@@ -904,7 +922,7 @@ dji_df['MODELO'] = dji_df['MODELO'].astype('category')
 fig, ax = plt.subplots(figsize=(12,6))
 fig.tight_layout(pad=2)
 fig.suptitle(
-    'Distribuição dos MODELOs de aeronave fabricadas pela DJI no SISANT',
+    'Distribuição dos modelos de aeronave fabricadas pela DJI no SISANT',
     weight='bold'
     )
 
