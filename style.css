@@ -1,15 +1,10 @@
 /* Global styles */
-head {
-  background-image: url('download.png');
-  background-repeat: no-repeat;
-  background-size: cover;
-}
 
 body {
   margin: 0;
   padding: 0;
   font-family: sans-serif;
-  }
+}
   
   /* Header styles */
   .header {
@@ -21,7 +16,6 @@ body {
   }
   
   .header h1 {
-    color: rgb(36, 66, 17);
     font-size: 2rem;
     font-weight: bold;
     text-align: center;
@@ -54,6 +48,9 @@ body {
   .main {
     margin-left: 200px;
     padding: 1rem;
+    background-image: url('https://i.imgur.com/nxlB9Is.png');
+    background-position: center center;
+    background-repeat: repeat;
   }
   
   /* Footer styles */

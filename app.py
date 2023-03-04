@@ -1,10 +1,19 @@
 ### Importando módulos:
+import numpy as np
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib.patches import Circle
 from re import match
 from wordcloud import WordCloud
+
+pd.options.mode.chained_assignment = None
+sns.set_theme(
+    style = 'white',
+    palette = 'tab10')
+
+st.set_page_config(page_title="caioems - Aeronaves no SISANT (ANAC)")
 
 with open('style.css') as css:
     st.markdown(
@@ -14,10 +23,12 @@ with open('style.css') as css:
         unsafe_allow_html=True
     )
 
-st.markdown(
-'<div class="header"><h1>Aeronaves no SISANT (ANAC)</h1></div>',
-unsafe_allow_html=True
-)
+# st.markdown(
+# '<div class="header"><h1>Aeronaves no SISANT (ANAC)</h1></div>',
+# unsafe_allow_html=True
+# )
+
+st.header('Aeronaves no SISANT (ANAC)')
 
 st.markdown(
 '''Para este projeto foram utilizados dados públicos do Sistema de Aeronaves não Tripuladas (SISANT), um orgão da Agência Nacional de Aviação Civil (ANAC), hospedados no portal [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados), contendo as aeronaves não tripuladas cadastradas em cumprimento ao parágrafo E94.301(b) do [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).'''
@@ -43,11 +54,6 @@ from re import match
 from wordcloud import WordCloud''',
 language='python'
 )
-
-pd.options.mode.chained_assignment = None
-sns.set_theme(
-    style = 'white',
-    palette = 'tab10')
 
 st.code(
 '''#carregando dados e visualizando a tabela
@@ -114,11 +120,9 @@ with st.container():
         )
 
     
-
-st.markdown('''
-### Metadados da tabela:
-
-- `CODIGO_AERONAVE`: Código da Aeronave. Segue regras:
+st.subheader('Metadados da tabela:')
+st.markdown(
+    '''- `CODIGO_AERONAVE`: Código da Aeronave. Segue regras:
     - Uso Recreativo (Aeromodelo): PR-XXXXXXXXX; 
     - Uso não recreativo básico (RPA Classe 3 operada em linha de visada visual abaixo de 400 pés): PP-XXXXXXXXX;
     - Uso avançado (RPA Classe 2 e demais Classe 3): PS-XXXXXXXXX;  
@@ -150,8 +154,7 @@ st.markdown('''
 _____
 ''')
 
-st.markdown('### Pré-processamento dos dados')
-
+st.subheader('Pré-processamento dos dados')
 st.markdown(
 '''Inicialmente a tabela foi indexada. A coluna CODIGO_AERONAVE era ideal para esse fim, já que teoricamente apresentava valores únicos e padronizados para cada aeronave do sistema. Porém, foram observados valores duplicados na coluna que precisaram ser removidos.'''
 )
@@ -439,11 +442,9 @@ with st.container():
     )
     st.markdown('___')
 
-
+st.subheader('Análise exploratória do dataframe:')
 st.markdown(
-'''### Análise exploratória do dataframe:  
-
-A coluna `DATA_VALIDADE`, como o próprio nome sugere, apresenta as datas em que os cadastros devem ser renovados. Conforme a legislação, sabe-se que o prazo de expiração é de dois anos contados a partir da data de cadastro, e que após seis meses de expiração o cadastro não é mais renovável (torna-se inativo), podemos obter dois tipos de informação a partir dessa coluna:  
+'''A coluna `DATA_VALIDADE`, como o próprio nome sugere, apresenta as datas em que os cadastros devem ser renovados. Conforme a legislação, sabe-se que o prazo de expiração é de dois anos contados a partir da data de cadastro, e que após seis meses de expiração o cadastro não é mais renovável (torna-se inativo), podemos obter dois tipos de informação a partir dessa coluna:  
 - A data de adesão da aeronave ao sistema;
 - Quantos cadastros encontram-se fora do prazo de validade, carecem de renovação ou recadastramento.''')
 
@@ -627,7 +628,8 @@ fig, ax = plt.subplots(figsize=(6,6))
 fig.tight_layout(pad=2)
 fig.suptitle(
     'Distribuição das aeronaves conforme o tipo de uso', 
-    weight='bold')
+    weight='bold'
+    )
 
 #criando gráfico de pizza
 ax.pie(
@@ -636,14 +638,24 @@ ax.pie(
     startangle=315
     )
 
-#criando um círculo branco centralizado
-centre_circle = plt.Circle((0,0),0.70,fc='white')
-fig.gca().add_artist(centre_circle)
+#criando um círculo centralizado (gráfico donut)
+center_circle = Circle(
+    xy=(0, 0),
+    radius=0.70,
+    fc='#0d0d0d'
+    )
+ax.add_artist(center_circle)
 
 #configurando atributos do gráfico
+fig.patch.set_facecolor('none') 
+fig.patch.set_edgecolor('white')
+fig.patch.set_linewidth(1)
 ax.axis('equal')    
 sns.despine(ax=ax)
-
+for text in fig.findobj(plt.Text):
+    if text.get_color() != 'white':
+        text.set_color('white')
+        
 #adicionando legenda
 fig.legend(
     labels = df['TIPO_USO'].value_counts().index.tolist(), 
@@ -657,7 +669,8 @@ fig, ax = plt.subplots(figsize=(6,6))
 fig.tight_layout(pad=2)
 fig.suptitle(
     'Distribuição das aeronaves conforme o tipo de uso', 
-    weight='bold')
+    weight='bold'
+    )
 
 #criando gráfico de pizza
 ax.pie(
@@ -666,14 +679,24 @@ ax.pie(
     startangle=315
     )
 
-#criando um círculo branco centralizado
-centre_circle = plt.Circle((0,0),0.70,fc='white')
-fig.gca().add_artist(centre_circle)
+#criando um círculo centralizado (gráfico donut)
+center_circle = Circle(
+    xy=(0, 0),
+    radius=0.70,
+    fc='#0d0d0d'
+    )
+ax.add_artist(center_circle)
 
 #configurando atributos do gráfico
+fig.patch.set_facecolor('none') 
+fig.patch.set_edgecolor('white')
+fig.patch.set_linewidth(1)
 ax.axis('equal')    
 sns.despine(ax=ax)
-
+for text in fig.findobj(plt.Text):
+    if text.get_color() != 'white':
+        text.set_color('white')
+        
 #adicionando legenda
 fig.legend(
     labels = df['TIPO_USO'].value_counts().index.tolist(), 
