@@ -91,7 +91,7 @@ def load_data():
     return df
     
 df = load_data()
-    
+
 st.dataframe(
     df,
     height=250,
@@ -100,9 +100,9 @@ st.dataframe(
 
 with st.container():
     import io
-    
+
     st.write('>Descrição da tabela:')
-    
+
     buffer = io.StringIO()
     df.info(buf=buffer)
     info_string = buffer.getvalue()
@@ -110,7 +110,7 @@ with st.container():
         info_string,
         language='python'
         )
-    
+
     st.dataframe(
         df.describe(
             include='all',  
@@ -119,7 +119,7 @@ with st.container():
         height=150
         )
 
-    
+
 st.subheader('Metadados da tabela:')
 st.markdown(
     '''- `CODIGO_AERONAVE`: Código da Aeronave. Segue regras:
@@ -207,10 +207,8 @@ language='python'
 #checando se os padrões de código seguem os descritos nos metadados e removendo os que não seguirem
 nrows_before = df.shape[0]
 
-mask = []
 pattern = '^(PR|PP|PS)-\d{9}$'
-for code in df['CODIGO_AERONAVE']:
-    mask.append(bool(match(pattern, code)))
+mask = [bool(match(pattern, code)) for code in df['CODIGO_AERONAVE']]
 df = df[mask]
 
 nrows_after = df.shape[0]
@@ -665,7 +663,7 @@ fig.legend(
     )
 
 #criando figure e axis    
-fig, ax = plt.subplots(figsize=(6,6))
+fig, ax = plt.subplots(figsize=(12,6))
 fig.tight_layout(pad=2)
 fig.suptitle(
     'Distribuição das aeronaves conforme o tipo de uso', 
@@ -688,8 +686,8 @@ center_circle = Circle(
 ax.add_artist(center_circle)
 
 #configurando atributos do gráfico
-fig.patch.set_facecolor('none') 
-fig.patch.set_edgecolor('white')
+# fig.patch.set_facecolor('none') 
+# fig.patch.set_edgecolor('white')
 fig.patch.set_linewidth(1)
 ax.axis('equal')    
 sns.despine(ax=ax)
