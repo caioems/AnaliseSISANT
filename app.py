@@ -1,10 +1,8 @@
 ### Importando módulos:
-import numpy as np
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 import seaborn as sns
-from matplotlib.patches import Circle
 from re import match
 from wordcloud import WordCloud
 
@@ -17,9 +15,10 @@ st.set_page_config(page_title="caioems - Aeronaves no SISANT (ANAC)")
 
 with open('style.css') as css:
     st.markdown(
-        '<style>{}</style>'.format(
-            css.read()
-        ),
+        f'<style>{css.read()}</style>',
+        # '<style>{}</style>'.format(
+        #     css.read()
+        # ),
         unsafe_allow_html=True
     )
 
@@ -530,24 +529,30 @@ agg_data.reset_index(inplace=True)
 
 #configurando figure e os axes
 fig, axs = plt.subplots(1, 2, figsize=(12,6))
-fig.suptitle('Cadastros bimestrais e status do cadastro', weight='bold')
+fig.suptitle(
+    'Cadastros bimestrais e status do cadastro', 
+    weight='bold', 
+    size='x-large'
+    )
 fig.tight_layout()
+fig.patch.set_alpha(0.6) 
 
 #criando o gráfico de linha
 sns.lineplot(
     agg_data,
     x='DATA_CADASTRO', 
-    y='OPERADOR',     
-    ax=axs[0]
+    y='OPERADOR',    
+    ax=axs[0],
     )
 
 #configurando atributos do gráfico de linhas
-axs[0].grid(axis='x', linestyle='--')
+axs[0].grid(axis='x', linestyle='--', color='black')
 axs[0].yaxis.grid(False)
 axs[0].set(
     xticks=['2020-12-31', '2021-12-31', '2022-12-31', '2022-12-31'], 
     ylabel=None, 
     xlabel='Data de cadastro',
+    fc='none'
     )
 sns.despine(ax=axs[0])
 
@@ -563,7 +568,9 @@ sns.countplot(
 axs[1].set(
     xlabel='Qtd. cadastros',
     ylabel=None,
+    fc='none'
     )
+
 sns.despine(ax=axs[1])
 
 #calculando numero de aeronaves em cada categoria
@@ -622,44 +629,30 @@ st.markdown(f'>A coluna `OPERADOR` teve {unique_ops1 - unique_ops2} nomes corrig
 
 st.code(
 '''#criando figure e axis    
-fig, ax = plt.subplots(figsize=(6,6))
+fig, ax = plt.subplots(figsize=(12,6))
 fig.tight_layout(pad=2)
 fig.suptitle(
     'Distribuição das aeronaves conforme o tipo de uso', 
-    weight='bold'
+    weight='bold',
+    size='x-large'
     )
 
 #criando gráfico de pizza
 ax.pie(
-    df['TIPO_USO'].value_counts(),  
-    autopct='%1.1f%%', 
-    startangle=315
+    df['TIPO_USO'].value_counts(), 
+    startangle=315,
     )
-
-#criando um círculo centralizado (gráfico donut)
-center_circle = Circle(
-    xy=(0, 0),
-    radius=0.70,
-    fc='#0d0d0d'
-    )
-ax.add_artist(center_circle)
 
 #configurando atributos do gráfico
-fig.patch.set_facecolor('none') 
-fig.patch.set_edgecolor('white')
-fig.patch.set_linewidth(1)
+fig.patch.set_alpha(0.3) 
 ax.axis('equal')    
 sns.despine(ax=ax)
-for text in fig.findobj(plt.Text):
-    if text.get_color() != 'white':
-        text.set_color('white')
         
 #adicionando legenda
 fig.legend(
     labels = df['TIPO_USO'].value_counts().index.tolist(), 
     loc = 'lower right'
-    )''',
-    language='python'
+    )'''
     )
 
 #criando figure e axis    
@@ -667,33 +660,26 @@ fig, ax = plt.subplots(figsize=(12,6))
 fig.tight_layout(pad=2)
 fig.suptitle(
     'Distribuição das aeronaves conforme o tipo de uso', 
-    weight='bold'
+    weight='bold',
+    size='x-large'
     )
 
 #criando gráfico de pizza
 ax.pie(
-    df['TIPO_USO'].value_counts(),  
-    autopct='%1.1f%%', 
-    startangle=315
+    df['TIPO_USO'].value_counts(), 
+    startangle=315,
     )
-
-#criando um círculo centralizado (gráfico donut)
-center_circle = Circle(
-    xy=(0, 0),
-    radius=0.70,
-    fc='#0d0d0d'
-    )
-ax.add_artist(center_circle)
 
 #configurando atributos do gráfico
+fig.patch.set_alpha(0.6) 
 # fig.patch.set_facecolor('none') 
 # fig.patch.set_edgecolor('white')
-fig.patch.set_linewidth(1)
-ax.axis('equal')    
+#fig.patch.set_linewidth(1)
+ax.axis('equal')  
 sns.despine(ax=ax)
-for text in fig.findobj(plt.Text):
-    if text.get_color() != 'white':
-        text.set_color('white')
+# for text in fig.findobj(plt.Text):
+#     if text.get_color() != 'white':
+#         text.set_color('white')
         
 #adicionando legenda
 fig.legend(
@@ -754,12 +740,13 @@ sns.countplot(
     ax=ax
     )
 
-ax.grid(axis = 'x', linestyle = '--')
+ax.grid(axis = 'x', linestyle = '--', color='black')
 #ax.yaxis.grid(False)
 
 ax.set(
     xlabel = None, 
-    ylabel = None
+    ylabel = None,
+    fc='none'
     )
 
 ax.legend(
@@ -767,6 +754,7 @@ ax.legend(
     labels = ['Pessoas físicas', 'Pessoas jurídicas']
     )
 
+fig.patch.set_alpha(0.6)
 sns.despine(ax=ax)
 
 st.pyplot(fig)
@@ -812,6 +800,7 @@ fig.suptitle(
     'Principais fabricantes das aeronaves no SISANT', 
     weight='bold'
     )
+fig.patch.set_alpha(0.6)
 
 #criando grafico word cloud para representar a frequência das fabricantes
 wordcloud = WordCloud(
@@ -827,6 +816,7 @@ wordcloud = WordCloud(
 #alterando atributos do axis
 ax.axis("off")
 ax.imshow(wordcloud, interpolation='bilinear')
+ax.set_facecolor('none')
 
 
 counts = df['FABRICANTE'].value_counts()
@@ -946,6 +936,7 @@ fig.suptitle(
     'Distribuição dos modelos de aeronave fabricadas pela DJI no SISANT',
     weight='bold'
     )
+fig.patch.set_alpha(0.6)
 
 #criando gráfico de barras
 sns.countplot(
@@ -957,7 +948,8 @@ sns.countplot(
 #adicionando grid
 ax.grid(
     axis='x', 
-    linestyle='--'
+    linestyle='--',
+    color='black'
     )
 #ax.yaxis.grid(False)
 
@@ -965,6 +957,7 @@ ax.grid(
 ax.set(
     xlabel=None,
     ylabel=None,
+    fc='none'
 )
 
 sns.despine(ax=ax)
@@ -1053,6 +1046,7 @@ fig.suptitle(
     weight='bold'
     )
 fig.tight_layout(pad=2)
+fig.patch.set_alpha(0.6)
 
 #criando gráfico de barras 1 (pessoas físicas)
 sns.countplot(
@@ -1075,7 +1069,8 @@ for bar in axs[0].patches:
 axs[0].set(
     xlabel=None, 
     ylabel=None,
-    title='PF'
+    title='PF',
+    fc='none'
     )
 
 sns.despine(ax=axs[0])
@@ -1101,7 +1096,8 @@ for bar in axs[1].patches:
 axs[1].set(
     xlabel=None, 
     ylabel=None,
-    title='PJ'
+    title='PJ',
+    fc='none'
     )
 
 sns.despine(ax=axs[1])
