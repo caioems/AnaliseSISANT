@@ -113,7 +113,7 @@ with st.container():
     st.dataframe(
         df.describe(
             include='all',  
-            datetime_is_numeric=True
+            #datetime_is_numeric=True
             ),
         height=150
         )
