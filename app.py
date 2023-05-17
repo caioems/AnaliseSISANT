@@ -27,24 +27,21 @@ with open('style.css') as css:
 # unsafe_allow_html=True
 # )
 
-st.header('Aeronaves no SISANT (ANAC)')
+st.header('Database analysis of aircrafts registered in the brazilian System of Unmanned Aircraft (SISANT) of the National Civil Aviation Agency of Brazil (ANAC)')
+
+st.markdown('''The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for the use of airspace, as well as methods for the registration and regulation of these aircraft, is still being built. SISANT is a national system that collects information about the aircraft's owner (operator), as well as the activities for which it is employed. The aircraft owner is responsible for the data submitted, and he can only legally operate a UAV after its registering.'''
+)
 
 st.markdown(
-'''Para este projeto foram utilizados dados públicos do Sistema de Aeronaves não Tripuladas (SISANT), um orgão da Agência Nacional de Aviação Civil (ANAC), hospedados no portal [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados), contendo as aeronaves não tripuladas cadastradas em cumprimento ao parágrafo E94.301(b) do [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).'''
-)
- 
-st.markdown('''O objetivo deste projeto é fixar métodos e práticas de data analytics utilizando Python. Considerando que os dados são crus, a experiência torna-se mais didática, uma vez que precisarão de pré-processamento.''')
- 
-st.markdown('''Assim sendo, pretende-se responder as seguintes perguntas:
-- Quantos drones estão cadastrados no dataset? Qual o status de cada cadastro?
-- Quantos diferentes OPERADORes estão cadastrados? Quais suas naturezas?
-- Qual uso é feito desses drones?
-- Qual empresa é a maior FABRICANTE? E quais seus os MODELOs mais populares?
+'''This project is using public data from the Unmanned Aircraft System (SISANT) of the National Civil Aviation Agency of Brazil (ANAC), hosted on the [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados) portal and contains the unmanned aircraft registered in compliance with paragraph E94.301(b) of [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).'''
+) 
+
+st.markdown('''The goal of this project is to apply data preprocessing methods and perform an exploratory analysis of the processed data.
 _____'''
 )
 
 st.code(
-'''#importando bibliotecas
+'''#importing libs
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -55,7 +52,7 @@ language='python'
 )
 
 st.code(
-'''#carregando dados e visualizando a tabela
+'''#loading and visualizing the data 
 @st.cache_data
 def load_data():
     url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
@@ -74,7 +71,7 @@ df = load_data()''',
 language='python'
 )
 
-#carregando dados e visualizando a tabela
+#loading and visualizing the data 
 @st.cache_data
 def load_data():
     url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
@@ -100,15 +97,12 @@ st.dataframe(
 with st.container():
     import io
 
-    st.write('>Descrição da tabela:')
+    st.write('>Table description:')
 
     buffer = io.StringIO()
     df.info(buf=buffer)
     info_string = buffer.getvalue()
-    st.code(
-        info_string,
-        language='python'
-        )
+    st.code(info_string)
 
     st.dataframe(
         df.describe(
@@ -119,13 +113,13 @@ with st.container():
         )
 
 
-st.subheader('Metadados da tabela:')
+st.subheader('Table metadata:')
 st.markdown(
-    '''- `CODIGO_AERONAVE`: Código da Aeronave. Segue regras:
-    - Uso Recreativo (Aeromodelo): PR-XXXXXXXXX; 
-    - Uso não recreativo básico (RPA Classe 3 operada em linha de visada visual abaixo de 400 pés): PP-XXXXXXXXX;
-    - Uso avançado (RPA Classe 2 e demais Classe 3): PS-XXXXXXXXX;  
-    - Obs: cada X representa um número 0-9.
+    '''- `CODIGO_AERONAVE`: Aircraft ID code. It follow some rules:
+    - Recreational use (Flying aircraft models): PR-XXXXXXXXX; 
+    - Basic non-recreational use (Class 3 UAV operated in line-of-sight below 400 feet): PP-XXXXXXXXX;
+    - Advanced use (Class 2 UAV and other Class 3): PS-XXXXXXXXX;  
+    - Note: each X represents a number from 0 to 9.
 
 - `DATA_VALIDADE`: Data de validade, igual a data em que o cadastro foi feito ou renovado mais 2 (dois) anos.  
 
