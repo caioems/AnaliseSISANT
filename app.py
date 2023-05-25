@@ -24,7 +24,8 @@ with open('style.css') as css:
 # unsafe_allow_html=True
 # )
 
-st.header('Database analysis of aircrafts registered in the brazilian System of Unmanned Aircraft (SISANT) of the National Civil Aviation Agency of Brazil (ANAC)')
+st.header('''Database analysis of aircrafts registered in the System of Unmanned Aircraft (SISANT) of the National Civil Aviation Agency of Brazil (ANAC)
+_____''')
 
 st.markdown('''The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for the use of airspace, as well as methods for the registration and regulation of these aircraft, is still being built. SISANT is a national system that collects information about the aircraft's owner (operator), as well as the activities for which it is employed. The aircraft owner is responsible for the data submitted, and he can only legally operate a UAV after its registering.'''
 )
@@ -94,7 +95,7 @@ st.dataframe(
 with st.container():
     import io
 
-    st.write('>Dataframe description:')
+    st.write('>Raw dataframe description:')
 
     buffer = io.StringIO()
     df.info(buf=buffer)
@@ -146,24 +147,31 @@ _____
 
 st.subheader('Data pre-processing')
 st.markdown(
-'''Initially the dataframe would be indexed by the column AIRCRAFT_ID. However, duplicate values were observed in the column that needed to be dropped.'''
+'''The dataframe would be initially indexed by the column AIRCRAFT_ID. However, duplicate values were found in the column and had to be removed.'''
+)
+
+#checking the duplicates to understand if the other columns also have repeated data
+dupl = df[df.duplicated(subset=['AIRCRAFT_ID'], keep=False)]
+
+st.write(
+    dupl.sort_values(by=['AIRCRAFT_ID'])
 )
 
 st.code(
 '''#removing whitespaces
-df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.strip().replace(" ", "")
+df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.replace(" ", "")
 
 #removing duplicates
 df = df.drop_duplicates(subset=['AIRCRAFT_ID'], keep='first')'''
 )
 
 #removing whitespaces
-df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.strip().replace(" ", "")
+df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.replace(" ", "")
 
 #removing duplicates
 df = df.drop_duplicates(subset=['AIRCRAFT_ID'], keep='first')
 
-#checking the duplicates to understand if the other columns also have repeated data
+
 # dupl = df[df.duplicated(subset=['AIRCRAFT_ID'], keep=False)]
 # print(dupl.sort_values(by=['AIRCRAFT_ID']).head())
 
@@ -175,12 +183,11 @@ And finally, the column 'AIRCRAFT_ID' was ready to be set as the dataframe index
 
 st.code(
 '''#checking that the codes for each aircraft conform to the patterns established in the metadata, and removing those that do not
-
 pattern = '^(PR|PP|PS)-\d{9}$'
 mask = [bool(match(pattern, code)) for code in df['AIRCRAFT_ID']]
 df = df[mask]
 
-#setting index:
+#setting index
 df = df.set_index(df['AIRCRAFT_ID'])
 df = df.drop(('AIRCRAFT_ID'), axis=1)'''
 )
@@ -196,7 +203,7 @@ nrows_after = df.shape[0]
 
 st.markdown(
 f'''>Entries removed by invalid patterns: **{nrows_before - nrows_after}**  
-Valid entries in the dataframe: **{nrows_after}**''')
+>Valid entries in the dataframe: **{nrows_after}**''')
 
 #setting index:
 df = df.set_index(df['AIRCRAFT_ID'])
@@ -208,53 +215,61 @@ st.dataframe(
     use_container_width=True)
 
 st.markdown(
-'''Following the data preprocessing, the columns `CPF_CNPJ` and `OPERATOR` were worked on. So first we are going to clean the CPF_CNPJ column.'''
+'''Following, the columns `CPF_CNPJ` and `OPERATOR` were worked on.'''
 )
 
 st.code(
 '''#removing whitespaces from the 'CPF_CNPJ' column'
-df['CPF_CNPJ'] = df['CPF_CNPJ'].str.strip().replace(" ", "")'''
+df['CPF_CNPJ'] = df['CPF_CNPJ'].str.replace(" ", "")'''
 )
 
 #removing whitespaces from the 'CPF_CNPJ' column
-df['CPF_CNPJ'] = df['CPF_CNPJ'].str.strip().str.replace(" ", "")
+df['CPF_CNPJ'] = df['CPF_CNPJ'].str.replace(" ", "")
 
-#TODO: LEGAL_ENT must be created here because CPF_CNPJ holds two kinds of information: the type of entity and its number
+st.write(df['CPF_CNPJ'])
+
 st.markdown(
-'''Now we will crosscheck the data in the `CPF_CNPJ` column with the `OPERATOR` column. The latter contains direct input from users, and in multiple entries different names were found for the same CPF/CNPJ. 
+''' Now, looking at the values of `CPF_CNPJ`, it's possible to see that it holds two kinds of information:
+- CPF or CNPJ: individuals or companies, respectively;
+- Numbers: its respective number (censored with * when its individual).    
 
-It is important to mention that the values related to the CPF are partially censored when stored in the database, aiming to preserve personal data.''')
-
-st.code(
-'''#grouping data by the column CPF_CNPJ, and the possible values for the column OPERATOR were sent to a list
-op_group = df.groupby('CPF_CNPJ')['OPERATOR'].apply(list).to_dict()
-
-#creating a map in dictionary format where the values of CPF_CNPJ will be the keys and the first value of the list of operators will be the name defined as default
-op_dict = {k: v[0] for k, v in op_group.items()}
-
-#replacing old values in the OPERATOR column with the default names
-df['OPERATOR'] = df['CPF_CNPJ'].map(op_dict)'''
+We are going to split this column because these data will be used separately.'''
 )
 
-#grouping data by the column CPF_CNPJ, and the possible values for the column OPERATOR were sent to a list
-op_group = df.groupby('CPF_CNPJ')['OPERATOR'].apply(list).to_dict()
+st.code(
+'''df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
+    lambda x: 'individual' if x.startswith('CPF') else 'company'
+    ).astype('category')
 
-#creating a map in dictionary format where the values of CPF_CNPJ will be the keys and the first value of the list of operators will be the name defined as default 
-op_dict = {k: v[0] for k, v in op_group.items()}
+df['ENT_NUM'] = df['CPF_CNPJ'].apply(
+    lambda x: ''.join(filter(str.isdigit, x.replace(':', '')))
+    ).astype('category')
 
-#replacing old values in the OPERATOR column with the default names
-unique_ops1 = df['OPERATOR'].nunique()
-df['OPERATOR'] = df['CPF_CNPJ'].map(op_dict)
-unique_ops2 = df['OPERATOR'].nunique()
+#dropping the CPF_CNPJ column
+df = df.drop(('CPF_CNPJ'), axis=1)'''   
+)
 
-st.markdown(f'''>The `OPERATOR` column had {unique_ops1 - unique_ops2} names fixed. ops = {df['OPERATOR'].nunique()} and cpfs = {df["CPF_CNPJ"].nunique()}''')
+# Splitting the 'CPF_CNPJ' column into 'LEGAL_ENT' and 'ENT_NUM'
+df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
+    lambda x: 'individual' if x.startswith('CPF') else 'company'
+    ).astype('category')
+
+df['ENT_NUM'] = df['CPF_CNPJ'].apply(
+    lambda x: ''.join(filter(str.isdigit, x.replace(':', '')))
+    ).astype('category')
+
+#dropping the CPF_CNPJ column
+df = df.drop(('CPF_CNPJ'), axis=1)
+
+st.write(df[['LEGAL_ENT', 'ENT_NUM']])
 
 #converting dtype
 df['TYPE_OF_USE'] = df['TYPE_OF_USE'].astype('category')
 
 st.markdown(
-'''The columns `MANUFACTURER` and `MODEL` needed more attention because, given the nature of their input, they present different values for the same category  
-Example: `DJI`, `Dji` and `dji` representing same manufacturer. Therefore, it is necessary to decrease the number of categories in the column. 
+'''The columns `MANUFACTURER` and `MODEL` needed more attention because, as they are direct user input, they present different values for the same category.
+  
+Example: `DJI`, `Dji` and `dji` represents same manufacturer. 
 
 We started with the `MANUFACTURER` column. The `MODEL` column will be transformed in another moment (we will work only with the models provided by the largest drone manufacturer in the database).''')
 
@@ -266,7 +281,7 @@ def fix_names(column, namemap, df=df):
 
 df['MANUFACTURER'] = df['MANUFACTURER'].str.lower().strip().replace(" ", "")
 
-#the dictionary was created based on the most common values, however, given the high amount of unique values, lesser expressed and unknown manufacturers were grouped in the 'outros' category       
+#the dictionary was created based on the most common values, however, given the high amount of unique values, lesser expressed and unknown manufacturers were grouped in the 'others' category       
 fab_map = {
     'autelrobotics': 'autel',
     'c-fly': 'cfly|c-fly',
@@ -278,7 +293,7 @@ fab_map = {
     'horus': 'horus',
     'hubsan': 'hubsan|hubsen',
     'nuvemuav': 'nuvem',
-    'outros': 'outro',
+    'others': 'outro',
     'parrot': 'parrot',
     'phoenixmodel': 'phoenix',
     'santiago&cintra': 'santiago|cintra',
@@ -304,9 +319,9 @@ def fix_names(column, namemap, df=df):
         df.loc[df[column].str.contains(bad_names, regex=True), column] = fixed_name
 
 df['MANUFACTURER'] = df['MANUFACTURER'].str.lower()
-df['MANUFACTURER'] = df['MANUFACTURER'].str.strip().replace(" ", "")
+df['MANUFACTURER'] = df['MANUFACTURER'].str.replace(" ", "")
 
-#the dictionary was created based on the most common values, however, given the high amount of unique values, lesser expressed and unknown manufacturers were grouped in the 'outros' category
+#the dictionary was created based on the most common values, however, given the high amount of unique values, lesser expressed and unknown manufacturers were grouped in the 'others' category
 fab_map = {
     'autelrobotics': 'autel',
     'c-fly': 'cfly|c-fly',
@@ -318,7 +333,7 @@ fab_map = {
     'horus': 'horus',
     'hubsan': 'hubsan|hubsen',
     'nuvemuav': 'nuvem',
-    'outros': 'outro',
+    'others': 'outro',
     'parrot': 'parrot',
     'phoenixmodel': 'phoenix',
     'santiago&cintra': 'santiago|cintra',
@@ -337,41 +352,13 @@ fix_names('MANUFACTURER', fab_map)
 
 df['MANUFACTURER'] = df['MANUFACTURER'].astype('category')
 
-if df['MANUFACTURER'].value_counts().sum() == nrows_after:
-    print('Column MANUFACTURER: OK')
-else:
-    print('Column MANUFACTURER: Problem')
-
 st.write(
 '''Finally, the `TYPE_OF_ACTIVITY` column was also validated and transformed. This column classifies the drones into the categories Recreational, Experimental, and Other activities, the latter category being specified in text form by the user.'''
 )
 
 st.code(
 '''#cleaning column
-df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.lower().strip().replace(" ", "")
-
-#again transforming the values of a column
-act_map = {
-    'educação': 'treinamento|educa|ensin|pesquis',
-    'engenharia': 'pulveriz|aeroagr|agricultura|levantamento|fotograme|prospec|topografia|minera|capta|avalia|mapea|geoproc|engenharia|energia|solar|ambiental|constru|obras|industria|arquitetura|meioambiente',    
-    'foto&cinem': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
-    'logística': 'transport|carga|delivery',
-    'publicidade': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
-    'segurança': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
-    }
-
-#reclassifying more specific activities into 'other' and converting the column dtype
-fix_names('TYPE_OF_ACTIVITY', act_map, df)
-df.loc[
-    ~df['TYPE_OF_ACTIVITY'].isin(
-        df['TYPE_OF_ACTIVITY'].value_counts().head(8).index
-        ), 'TYPE_OF_ACTIVITY'
-    ] = 'outros'
-df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].astype('category')'''
-)
-
-#cleaning column
-df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.strip().replace(" ", "")
+df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.replace(" ", "")
 df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.lower()
 
 #again transforming the values of the column
@@ -386,11 +373,39 @@ act_map = {
 
 #reclassifying more specific activities into 'other' and converting the column dtype
 fix_names('TYPE_OF_ACTIVITY', act_map, df)
+
 df.loc[
     ~df['TYPE_OF_ACTIVITY'].isin(
         df['TYPE_OF_ACTIVITY'].value_counts().head(8).index
         ), 'TYPE_OF_ACTIVITY'
-    ] = 'outros'
+    ] = 'others'
+
+df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].astype('category')'''
+)
+
+#cleaning column
+df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.replace(" ", "")
+df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.lower()
+
+#again transforming the values of the column
+act_map = {
+    'educação': 'treinamento|educa|ensin|pesquis',
+    'engenharia': 'pulveriz|aeroagr|agricultura|levantamento|fotograme|prospec|topografia|minera|capta|avalia|mapea|geoproc|engenharia|energia|solar|ambiental|constru|obras|industria|arquitetura|meioambiente',    
+    'foto&cinem': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
+    'logística': 'transport|carga|delivery',
+    'publicidade': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
+    'segurança': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
+    }
+
+#reclassifying more specific activities into 'other' and converting the column dtype
+fix_names('TYPE_OF_ACTIVITY', act_map, df)
+
+df.loc[
+    ~df['TYPE_OF_ACTIVITY'].isin(
+        df['TYPE_OF_ACTIVITY'].value_counts().head(8).index
+        ), 'TYPE_OF_ACTIVITY'
+    ] = 'others'
+
 df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].astype('category')
 
 st.markdown(
@@ -398,16 +413,11 @@ st.markdown(
 )
 
 st.code(
-'''#dropping columns that will not be used
-df = df.drop(('SERIAL_NUMBER'), axis=1)
-df = df.drop(('MAX_WEIGHT_TAKEOFF'), axis=1)
+'''#dropping columns that won't be used
+df = df.drop([('SERIAL_NUMBER'), ('MAX_WEIGHT_TAKEOFF')], axis=1)''')
 
-#checking the data in the pre-processed dataset
-df.describe(include='all', datetime_is_numeric=True)''')
-
-#dropping columns that will not be used
-df = df.drop(('SERIAL_NUMBER'), axis=1)
-df = df.drop(('MAX_WEIGHT_TAKEOFF'), axis=1)
+#dropping columns that won't be used
+df = df.drop([('SERIAL_NUMBER'), ('MAX_WEIGHT_TAKEOFF')], axis=1)
 
 st.markdown('>Pre-processed dataframe:')
 
@@ -438,20 +448,21 @@ st.markdown(
 - How many registrations are past their expiration date, in need of renewal or re-registration.''')
 
 st.code(
-'''#creating 'REG_DATE' column, containing the date of registration
+'''#creating column 'REG_DATE'
 df['REG_DATE'] = df['EXPIRATION_DATE'] - pd.DateOffset(years=2)
 
-#creating a function that sorts dates according to register status
-def status_cadastro(date):
+##creating a function that sorts dates according to register status (register ok, renew ou inactive)
+def reg_status(date):
     today = pd.Timestamp.today()
     if date < today:
-        return 'renovar'
+        return 'renew'
     elif date + pd.DateOffset(months=6) < today:
-        return 'inativo'
-    return 'ok'
+        return 'inactive'
+    else:
+        return 'ok'
 
-#creating a 'STATUS' column, containing categorized data about each aircraft (registration ok, renew or inactive)
-df['STATUS'] = df['EXPIRATION_DATE'].apply(status_cadastro)
+#creating a 'STATUS' column, containing categorized data about each aircraft
+df['STATUS'] = df['EXPIRATION_DATE'].apply(reg_status)
 df['STATUS'] = df['STATUS'].astype('category')
 
 #aggregating data by month
@@ -460,75 +471,15 @@ agg_data.reset_index(inplace=True)
 
 #setting up figure and axes
 fig, axs = plt.subplots(1, 2, figsize=(12,6))
-fig.suptitle('Cadastros bimestrais e status do cadastro', weight='bold')
-fig.tight_layout()
-
-#criando o gráfico de linha
-sns.lineplot(
-    agg_data,
-    x='REG_DATE', 
-    y='OPERATOR',     
-    ax=axs[0]
-    )
-
-#configurando atributos do gráfico de linhas
-axs[0].grid(axis='x', linestyle='--')
-axs[0].yaxis.grid(False)
-axs[0].set(
-    xticks=['2020-12-31', '2021-12-31', '2022-12-31', '2022-12-31'], 
-    ylabel=None, 
-    xlabel='Data de cadastro',
-    )
-sns.despine(ax=axs[0])
-
-#criando o gráfico de barras
-sns.countplot(
-    df, 
-    y='STATUS',
-    order=df['STATUS'].value_counts().iloc[:3].index, 
-    ax=axs[1]
-    )
-
-#configurando atributos do gráfico de barras
-axs[1].set(
-    xlabel='Qtd. cadastros',
-    ylabel=None,
-    )
-sns.despine(ax=axs[1])''',
-language='python'
-)
-
-#criando coluna 'REG_DATE'
-df['REG_DATE'] = df['EXPIRATION_DATE'] - pd.DateOffset(years=2)
-
-#criando função que classifica datas conforme situação do cadastro
-def reg_status(date):
-    today = pd.Timestamp.today()
-    if date < today:
-        return 'renovar'
-    elif date + pd.DateOffset(months=6) < today:
-        return 'inativo'
-    return 'ok'
-
-#criando coluna 'STATUS', contendo dados categorizados sobre cada aeronave (cadastro ok, renovar ou inativo)
-df['STATUS'] = df['EXPIRATION_DATE'].apply(reg_status)
-df['STATUS'] = df['STATUS'].astype('category')
-
-#agregando dados por mês
-agg_data = df.resample('M', on='REG_DATE').count()
-agg_data.reset_index(inplace=True)
-
-#configurando figure e os axes
-fig, axs = plt.subplots(1, 2, figsize=(12,6))
 fig.suptitle(
-    'Cadastros bimestrais e status do cadastro', 
+    'Monthly registrations and registration status', 
     weight='bold', 
     size='x-large'
     )
 fig.tight_layout()
 fig.patch.set_alpha(0.6) 
 
-#criando o gráfico de linha
+#creaeting line plot
 sns.lineplot(
     agg_data,
     x='REG_DATE', 
@@ -536,18 +487,18 @@ sns.lineplot(
     ax=axs[0],
     )
 
-#configurando atributos do gráfico de linhas
+#setting line plot attributes
 axs[0].grid(axis='x', linestyle='--', color='black')
 axs[0].yaxis.grid(False)
 axs[0].set(
     xticks=['2020-12-31', '2021-12-31', '2022-12-31', '2022-12-31'], 
     ylabel=None, 
-    xlabel='Data de cadastro',
+    xlabel='Registration date',
     fc='none'
     )
 sns.despine(ax=axs[0])
 
-#criando o gráfico de barras
+#creating bar plot
 sns.countplot(
     df, 
     y='STATUS',
@@ -555,22 +506,92 @@ sns.countplot(
     ax=axs[1]
     )
 
-#configurando atributos do gráfico de barras
+#setting bar plot attributes
 axs[1].set(
-    xlabel='Qtd. cadastros',
+    xlabel='Number of registrations',
+    ylabel=None,
+    fc='none'
+    )'''
+)
+
+#TODO: move REG_DATE and STATUS creation to pre-processing section
+#creating column 'REG_DATE'
+df['REG_DATE'] = df['EXPIRATION_DATE'] - pd.DateOffset(years=2)
+
+##creating a function that sorts dates according to register status (register ok, renew ou inactive)
+def reg_status(date):
+    today = pd.Timestamp.today()
+    if date < today:
+        return 'renew'
+    elif date + pd.DateOffset(months=6) < today:
+        return 'inactive'
+    else:
+        return 'ok'
+
+#creating a 'STATUS' column, containing categorized data about each aircraft
+df['STATUS'] = df['EXPIRATION_DATE'].apply(reg_status)
+df['STATUS'] = df['STATUS'].astype('category')
+
+#aggregating data by month
+agg_data = df.resample('M', on='REG_DATE').count()
+agg_data.reset_index(inplace=True)
+
+#setting up figure and axes
+fig, axs = plt.subplots(1, 2, figsize=(12,6))
+fig.suptitle(
+    'Monthly registrations and registration status', 
+    weight='bold', 
+    size='x-large'
+    )
+fig.tight_layout()
+fig.patch.set_alpha(0.6) 
+
+#creaeting line plot
+sns.lineplot(
+    agg_data,
+    x='REG_DATE', 
+    y='OPERATOR',    
+    ax=axs[0],
+    )
+
+#setting line plot attributes
+axs[0].grid(axis='x', linestyle='--', color='black')
+axs[0].yaxis.grid(False)
+axs[0].set(
+    xticks=['2020-12-31', '2021-12-31', '2022-12-31', '2022-12-31'], 
+    ylabel=None, 
+    xlabel='Registration date',
+    fc='none'
+    )
+sns.despine(ax=axs[0])
+
+#creating bar plot
+sns.countplot(
+    df, 
+    y='STATUS',
+    order=df['STATUS'].value_counts().iloc[:3].index, 
+    ax=axs[1]
+    )
+
+#setting bar plot attributes
+axs[1].set(
+    xlabel='Number of registrations',
     ylabel=None,
     fc='none'
     )
 
 sns.despine(ax=axs[1])
 
-#calculando numero de aeronaves em cada categoria
-n_inact = df[df['STATUS']=='inativo'].shape[0]
-n_renew = df[df['STATUS']=='renovar'].shape[0]
+#calculating the number of aircraft in each category
+n_inact = df[df['STATUS']=='inactive'].shape[0]
+n_renew = df[df['STATUS']=='renew'].shape[0]
 n_ok = df[df['STATUS']=='ok'].shape[0]
 
 st.markdown(
-f'''>De forma geral, observou-se que a taxa de adesão de aeronaves ao sistema vem crescendo a cada mês. E do total de cadastros verificados ({df.shape[0]}), {n_inact} ({round(n_inact / df.shape[0] * 100, ndigits=1)}%) estão inativos, {n_renew} ({round(n_renew / df.shape[0] * 100, ndigits=1)}%) precisam ser renovados  e {n_ok} ({round(n_ok / df.shape[0] * 100, ndigits=1)}%) estão regularizados.''')
+f'''>Considering the total number of registrations ({df.shape[0]}):
+>- {n_inact} ({round(n_inact / df.shape[0] * 100, ndigits=1)}%) are inactive;
+>- {n_renew} ({round(n_renew / df.shape[0] * 100, ndigits=1)}%) need to be renewed; and
+>- {n_ok} ({round(n_ok / df.shape[0] * 100, ndigits=1)}%) are up to date.''')
 
 st.pyplot(fig)
 
@@ -646,12 +667,7 @@ Adicionalmente esses números ainda foram comparados com recém-criada a coluna 
 )
 
 st.code(
-'''#criando coluna LEGAL_ENT contendo classificação dos operadores entre pessoa física ou jurídica
-df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
-    lambda x: 'PF' if x.startswith('CPF') else 'PJ'
-    ).astype('category')
-
-fig, ax = plt.subplots(figsize = (12,6))
+'''fig, ax = plt.subplots(figsize = (12,6))
 fig.tight_layout(pad=2)
 fig.suptitle(
     'Distribuição das aeronaves conforme os ramos de atividade no SISANT', 
@@ -676,11 +692,6 @@ ax.legend(
 
 sns.despine(ax=ax)'''
 )
-
-#criando coluna LEGAL_ENT contendo classificação dos operadores entre pessoa física ou jurídica
-df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
-    lambda x: 'PF' if x.startswith('CPF') else 'PJ'
-    ).astype('category')
 
 fig, ax = plt.subplots(figsize = (12,6))
 fig.tight_layout(pad=2)
@@ -786,7 +797,7 @@ st.pyplot(fig)
 
 st.markdown(f'>A maior fornecedora é {percentages.index[0].upper()}, com frequência de {percentages[0]}%.')
 
-st.write(percentages.head(5))
+st.write(percentages.head())
 
 st.markdown('Foram então verificados quais os principais modelos de aeronaves fornecidas pela DJI nos dados do sistema. Para isso, a coluna `MODEL` foi finalmente pré-processada.')
 
@@ -811,15 +822,15 @@ dji_model_map = {
     'tello': 'tello|tlw004',
     'agras': 'agras|mg-1p|mg1p|t16|t10|t40|3wwdz',
     'fpv': 'fpv',
-    'outros': 'dji'
+    'others': 'dji'
     }
 
 #novamente utilizando a função fix_names, dessa vez com argumentos
 #relativos a coluna MODEL
 fix_names('MODEL', dji_model_map, dji_df)
 
-#renomeando modelos não reconhecidos como "outros"
-dji_df.loc[~dji_df['MODEL'].isin(dji_df['MODEL'].value_counts().head(14).index), 'MODEL'] = 'outros'
+#renomeando modelos não reconhecidos como "others"
+dji_df.loc[~dji_df['MODEL'].isin(dji_df['MODEL'].value_counts().head(14).index), 'MODEL'] = 'others'
 
 dji_df['MODEL'] = dji_df['MODEL'].astype('category')
 
@@ -874,15 +885,15 @@ dji_model_map = {
     'tello': 'tello|tlw004',
     'agras': 'agras|mg-1p|mg1p|t16|t10|t40|3wwdz',
     'fpv': 'fpv',
-    'outros': 'dji'
+    'others': 'dji'
     }
 
 #novamente utilizando a função fix_names, dessa vez com argumentos
 #relativos a coluna MODEL
 fix_names('MODEL', dji_model_map, dji_df)
 
-#renomeando modelos não reconhecidos como "outros"
-dji_df.loc[~dji_df['MODEL'].isin(dji_df['MODEL'].value_counts().head(14).index), 'MODEL'] = 'outros'
+#renomeando modelos não reconhecidos como "others"
+dji_df.loc[~dji_df['MODEL'].isin(dji_df['MODEL'].value_counts().head(14).index), 'MODEL'] = 'others'
 
 dji_df['MODEL'] = dji_df['MODEL'].astype('category')
 
@@ -988,13 +999,12 @@ axs[1].set(
     title='PJ'
     )
 
-sns.despine(ax=axs[1])''',
-language='python'
+sns.despine(ax=axs[1])'''
 )
 
 #criando subsets baseados na coluna LEGAL_ENT
-ind_df = df.loc[df['LEGAL_ENT']=='PF', 'MANUFACTURER']
-co_df = df.loc[df['LEGAL_ENT']=='PJ', 'MANUFACTURER']
+ind_df = df.loc[df['LEGAL_ENT']=='individual', 'MANUFACTURER']
+co_df = df.loc[df['LEGAL_ENT']=='company', 'MANUFACTURER']
 
 #criando estrutura dos gráficos
 fig, axs = plt.subplots(1, 2, figsize=(12,6), sharey=True)
