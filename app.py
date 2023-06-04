@@ -2,15 +2,13 @@
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
-import seaborn as sns
-from re import match, sub
+import plotly.express as px
+import plotly.graph_objects as go
+import plotly.subplots as sp
+from re import match
 from wordcloud import WordCloud
 
 pd.options.mode.chained_assignment = None
-sns.set_theme(
-    style = 'white',
-    palette = 'tab10')
-
 st.set_page_config(page_title="caioems - Aircrafts in SISANT (ANAC)")
 
 with open('style.css') as css:
@@ -34,7 +32,7 @@ st.markdown(
 '''This project is using public data from the Unmanned Aircraft System (SISANT) of the National Civil Aviation Agency of Brazil (ANAC), hosted on the [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados) portal and contains the unmanned aircraft registered in compliance with paragraph E94.301(b) of [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).'''
 ) 
 
-st.markdown('''The goal of this project is to apply data preprocessing methods and perform an exploratory analysis of the processed data.
+st.markdown('''The goal of this project is to apply data preprocessing methods and perform an exploratory analysis of the processed data. Python was selected for the task and all the data was handled with Pandas. The plotting libraries selected were Pyplot, Plotly and WordCloud.
 _____'''
 )
 
@@ -43,7 +41,9 @@ st.code(
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
+import plotly.subplots as sp
 from re import match
 from wordcloud import WordCloud'''
 )
@@ -147,7 +147,7 @@ _____
 
 st.subheader('Data pre-processing')
 st.markdown(
-'''The dataframe would be initially indexed by the column AIRCRAFT_ID. However, duplicate values were found in the column and had to be removed.'''
+'''The dataframe would be initially indexed by the column `AIRCRAFT_ID`. However, duplicate values were found in the column and had to be removed.'''
 )
 
 #checking the duplicates to understand if the other columns also have repeated data
@@ -178,7 +178,7 @@ df = df.drop_duplicates(subset=['AIRCRAFT_ID'], keep='first')
 st.markdown(
 '''Next, the column was also checked for values that did not follow the digit patterns presented in the dataset metadata.  
     
-And finally, the column 'AIRCRAFT_ID' was ready to be set as the dataframe index.'''
+And finally, the column `AIRCRAFT_ID` was ready to be set as the dataframe index.'''
 )
 
 st.code(
@@ -215,7 +215,51 @@ st.dataframe(
     use_container_width=True)
 
 st.markdown(
-'''Following, the columns `CPF_CNPJ` and `OPERATOR` were worked on.'''
+'''The `EXPIRATION_DATE` was already parsed to datetime format. Even though the column is already informative as it is, from it we can derive two other columns that will also be useful:
+- `STATUS` - A categorical column including each aircraft registration status. According to the regulation, the expiration date is two years from the date of registration. After six months of expiration the registration is no longer renewable (it becomes inactive); and
+- `REG_DATE` - The date of the registration, calculated from `EXPIRATION_DATE` minus the standard validity period (two years).'''
+)
+
+st.code(
+'''#creating a function that sorts dates according to register status
+def reg_status(date):
+    today = pd.Timestamp.today()
+    if date < today:
+        return 'renew'
+    elif date < today - pd.DateOffset(months=6):
+        return 'inactive'
+    else:
+        return 'ok'
+
+#creating a 'STATUS' column, containing categorized data about each aircraft
+df['STATUS'] = df['EXPIRATION_DATE'].apply(reg_status)
+df['STATUS'] = df['STATUS'].astype('category')
+
+#creating column 'REG_DATE'
+df['REG_DATE'] = df['EXPIRATION_DATE'] - pd.DateOffset(years=2)'''
+)
+
+#creating a function that sorts dates according to register status (register ok, renew ou inactive)
+def reg_status(date):
+    today = pd.Timestamp.today()
+    if date < today:
+        return 'renew'
+    elif date < today - pd.DateOffset(months=6):
+        return 'inactive'
+    else:
+        return 'ok'
+
+#creating a 'STATUS' column, containing categorized data about each aircraft
+df['STATUS'] = df['EXPIRATION_DATE'].apply(reg_status)
+df['STATUS'] = df['STATUS'].astype('category')
+
+#creating column 'REG_DATE'
+df['REG_DATE'] = df['EXPIRATION_DATE'] - pd.DateOffset(years=2)
+
+st.write(df[['STATUS', 'REG_DATE']])
+
+st.markdown(
+'''Following, the column `CPF_CNPJ` was worked on.'''
 )
 
 st.code(
@@ -229,11 +273,13 @@ df['CPF_CNPJ'] = df['CPF_CNPJ'].str.replace(" ", "")
 st.write(df['CPF_CNPJ'])
 
 st.markdown(
-''' Now, looking at the values of `CPF_CNPJ`, it's possible to see that it holds two kinds of information:
+'''After a close look at the values of `CPF_CNPJ`, it's possible to see that it holds two types of information:
 - CPF or CNPJ: individuals or companies, respectively;
-- Numbers: its respective number (censored with * when its individual).    
+- Numbers 0-9: its proper number code. It's important to note that the CPF numbers are distributed in suppressed form due to privacy. The CNPJ numbers are public information however.    
 
-We are going to split this column because these data will be used separately.'''
+So we are going to split this column into: 
+- `LEGAL_ENT`, with two categories (individual or company); and
+- `ENT_NUM`, containing its number code.'''
 )
 
 st.code(
@@ -267,7 +313,7 @@ st.write(df[['LEGAL_ENT', 'ENT_NUM']])
 df['TYPE_OF_USE'] = df['TYPE_OF_USE'].astype('category')
 
 st.markdown(
-'''The columns `MANUFACTURER` and `MODEL` needed more attention because, as they are direct user input, they present different values for the same category.
+'''The columns `MANUFACTURER` and `MODEL` needed more attention because, as they contain text input, they may have different values for the same category.
   
 Example: `DJI`, `Dji` and `dji` represents same manufacturer. 
 
@@ -307,7 +353,7 @@ fab_map = {
     'zll': 'zll|sg906'
     }
 
-#transforming the column with the manufacturers' names
+#transforming the column with the manufacturers names
 fix_names('MANUFACTURER', fab_map)
 
 df['MANUFACTURER'] = df['MANUFACTURER'].astype('category')'''
@@ -352,8 +398,10 @@ fix_names('MANUFACTURER', fab_map)
 
 df['MANUFACTURER'] = df['MANUFACTURER'].astype('category')
 
+#TODO: max weight takeoff analysis
+
 st.write(
-'''Finally, the `TYPE_OF_ACTIVITY` column was also validated and transformed. This column classifies the drones into the categories Recreational, Experimental, and Other activities, the latter category being specified in text form by the user.'''
+'''Finally, the `TYPE_OF_ACTIVITY` column was also validated and transformed. This column categorizes the drones into 'Recreational', 'Experimental', and 'Other activities', the latter category being specified in text provided by the user.'''
 )
 
 st.code(
@@ -363,12 +411,12 @@ df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.lower()
 
 #again transforming the values of the column
 act_map = {
-    'educação': 'treinamento|educa|ensin|pesquis',
-    'engenharia': 'pulveriz|aeroagr|agricultura|levantamento|fotograme|prospec|topografia|minera|capta|avalia|mapea|geoproc|engenharia|energia|solar|ambiental|constru|obras|industria|arquitetura|meioambiente',    
-    'foto&cinem': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
-    'logística': 'transport|carga|delivery',
-    'publicidade': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
-    'segurança': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
+    'education': 'treinamento|educa|ensin|pesquis',
+    'engineering': 'pulveriz|aeroagr|agricultura|levantamento|fotograme|prospec|topografia|minera|capta|avalia|mapea|geoproc|engenharia|energia|solar|ambiental|constru|obras|industria|arquitetura|meioambiente',    
+    'photo&film': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
+    'logistics': 'transport|carga|delivery',
+    'publicity': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
+    'safety': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
     }
 
 #reclassifying more specific activities into 'other' and converting the column dtype
@@ -389,12 +437,12 @@ df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.lower()
 
 #again transforming the values of the column
 act_map = {
-    'educação': 'treinamento|educa|ensin|pesquis',
-    'engenharia': 'pulveriz|aeroagr|agricultura|levantamento|fotograme|prospec|topografia|minera|capta|avalia|mapea|geoproc|engenharia|energia|solar|ambiental|constru|obras|industria|arquitetura|meioambiente',    
-    'foto&cinem': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
-    'logística': 'transport|carga|delivery',
-    'publicidade': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
-    'segurança': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
+    'education': 'treinamento|educa|ensin|pesquis',
+    'engineering': 'pulveriz|aeroagr|agricultura|levantamento|fotograme|prospec|topografia|minera|capta|avalia|mapea|geoproc|engenharia|energia|solar|ambiental|constru|obras|industria|arquitetura|meioambiente',    
+    'photo&film': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
+    'logistics': 'transport|carga|delivery',
+    'publicity': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
+    'safety': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
     }
 
 #reclassifying more specific activities into 'other' and converting the column dtype
@@ -417,170 +465,78 @@ st.code(
 df = df.drop([('SERIAL_NUMBER'), ('MAX_WEIGHT_TAKEOFF')], axis=1)''')
 
 #dropping columns that won't be used
-df = df.drop([('SERIAL_NUMBER'), ('MAX_WEIGHT_TAKEOFF')], axis=1)
+df = df.drop([('SERIAL_NUMBER')], axis=1)
 
 st.markdown('>Pre-processed dataframe:')
 
 with st.container():
     import io
-    
+
     buffer = io.StringIO()
     df.info(buf=buffer)
     info_string = buffer.getvalue()
     st.code(
-        info_string,
-        language='python'
+        info_string
         )
 
     st.dataframe(
         df.describe(
             include='all', 
-            #datetime_is_numeric=True
+            datetime_is_numeric=True
             ),
         height=150
     )
     st.markdown('___')
 
 st.subheader('Exploratory dataframe analysis')
+
 st.markdown(
-'''The `EXPIRATION_DATE` column, as the name suggests, shows the dates on which the entries must be renewed. According to the regulation, it is known that the expiration date is two years from the date of registration. And that after six months of expiration the registration is no longer renewable (it becomes inactive). We can get two types of information from this column:  
-- The date the aircraft joined the system;
-- How many registrations are past their expiration date, in need of renewal or re-registration.''')
+'''Let's start by checking the dates related to each aircraft registration. By comparing information of columns `STATUS`, `REG_DATE` and `EXPIRATON_DATE` we can better understand the rate of adherence to the system and also about the maintenance of these registers. .''')
 
 st.code(
-'''#creating column 'REG_DATE'
-df['REG_DATE'] = df['EXPIRATION_DATE'] - pd.DateOffset(years=2)
-
-##creating a function that sorts dates according to register status (register ok, renew ou inactive)
-def reg_status(date):
-    today = pd.Timestamp.today()
-    if date < today:
-        return 'renew'
-    elif date + pd.DateOffset(months=6) < today:
-        return 'inactive'
-    else:
-        return 'ok'
-
-#creating a 'STATUS' column, containing categorized data about each aircraft
-df['STATUS'] = df['EXPIRATION_DATE'].apply(reg_status)
-df['STATUS'] = df['STATUS'].astype('category')
-
-#aggregating data by month
+'''#aggregating data by month
 agg_data = df.resample('M', on='REG_DATE').count()
 agg_data.reset_index(inplace=True)
 
-#setting up figure and axes
-fig, axs = plt.subplots(1, 2, figsize=(12,6))
-fig.suptitle(
-    'Monthly registrations and registration status', 
-    weight='bold', 
-    size='x-large'
-    )
-fig.tight_layout()
-fig.patch.set_alpha(0.6) 
-
-#creaeting line plot
-sns.lineplot(
-    agg_data,
+#creating line plot
+fig = px.line(
+    agg_data, 
     x='REG_DATE', 
-    y='OPERATOR',    
-    ax=axs[0],
+    y='OPERATOR', 
+    title='Monthly registrations',
+    labels={'REG_DATE': '', 'OPERATOR': 'new registers'}
     )
 
-#setting line plot attributes
-axs[0].grid(axis='x', linestyle='--', color='black')
-axs[0].yaxis.grid(False)
-axs[0].set(
-    xticks=['2020-12-31', '2021-12-31', '2022-12-31', '2022-12-31'], 
-    ylabel=None, 
-    xlabel='Registration date',
-    fc='none'
-    )
-sns.despine(ax=axs[0])
-
-#creating bar plot
-sns.countplot(
-    df, 
-    y='STATUS',
-    order=df['STATUS'].value_counts().iloc[:3].index, 
-    ax=axs[1]
-    )
-
-#setting bar plot attributes
-axs[1].set(
-    xlabel='Number of registrations',
-    ylabel=None,
-    fc='none'
-    )'''
+#creating histogram plot
+fig = px.histogram(
+    df,
+    x='STATUS',
+    color='STATUS',
+    text_auto=True
 )
 
-#TODO: move REG_DATE and STATUS creation to pre-processing section
-#creating column 'REG_DATE'
-df['REG_DATE'] = df['EXPIRATION_DATE'] - pd.DateOffset(years=2)
+#removing legend
+fig.update_layout(showlegend=False)
 
-##creating a function that sorts dates according to register status (register ok, renew ou inactive)
-def reg_status(date):
-    today = pd.Timestamp.today()
-    if date < today:
-        return 'renew'
-    elif date + pd.DateOffset(months=6) < today:
-        return 'inactive'
-    else:
-        return 'ok'
-
-#creating a 'STATUS' column, containing categorized data about each aircraft
-df['STATUS'] = df['EXPIRATION_DATE'].apply(reg_status)
-df['STATUS'] = df['STATUS'].astype('category')
+#adding an annotation
+fig.add_annotation(
+    xref='paper',
+    yref='paper',
+    x=0.02,
+    y=1.1,
+    text=f'The majority ({round(n_ok / df.shape[0] * 100, ndigits=1)}%) of the aircrafts are fine...',
+    showarrow=False,
+    font=dict(
+        color='white',
+        size=24,
+        family='Open Sans'
+    )
+)'''
+)
 
 #aggregating data by month
 agg_data = df.resample('M', on='REG_DATE').count()
 agg_data.reset_index(inplace=True)
-
-#setting up figure and axes
-fig, axs = plt.subplots(1, 2, figsize=(12,6))
-fig.suptitle(
-    'Monthly registrations and registration status', 
-    weight='bold', 
-    size='x-large'
-    )
-fig.tight_layout()
-fig.patch.set_alpha(0.6) 
-
-#creaeting line plot
-sns.lineplot(
-    agg_data,
-    x='REG_DATE', 
-    y='OPERATOR',    
-    ax=axs[0],
-    )
-
-#setting line plot attributes
-axs[0].grid(axis='x', linestyle='--', color='black')
-axs[0].yaxis.grid(False)
-axs[0].set(
-    xticks=['2020-12-31', '2021-12-31', '2022-12-31', '2022-12-31'], 
-    ylabel=None, 
-    xlabel='Registration date',
-    fc='none'
-    )
-sns.despine(ax=axs[0])
-
-#creating bar plot
-sns.countplot(
-    df, 
-    y='STATUS',
-    order=df['STATUS'].value_counts().iloc[:3].index, 
-    ax=axs[1]
-    )
-
-#setting bar plot attributes
-axs[1].set(
-    xlabel='Number of registrations',
-    ylabel=None,
-    fc='none'
-    )
-
-sns.despine(ax=axs[1])
 
 #calculating the number of aircraft in each category
 n_inact = df[df['STATUS']=='inactive'].shape[0]
@@ -593,199 +549,130 @@ f'''>Considering the total number of registrations ({df.shape[0]}):
 >- {n_renew} ({round(n_renew / df.shape[0] * 100, ndigits=1)}%) need to be renewed; and
 >- {n_ok} ({round(n_ok / df.shape[0] * 100, ndigits=1)}%) are up to date.''')
 
-st.pyplot(fig)
+#creating and displaying line plot
+fig = px.line(
+    agg_data, 
+    x='REG_DATE', 
+    y='OPERATOR', 
+    title='Monthly registrations',
+    labels={'REG_DATE': '', 'OPERATOR': 'new registers'}
+    )
+
+st.plotly_chart(fig)
+
+#creating histogram plot
+fig = px.histogram(
+    df,
+    x='STATUS',
+    color='STATUS',
+    text_auto=True
+)
+
+#removing legend
+fig.update_layout(showlegend=False)
+
+#adding an annotation
+fig.add_annotation(
+    xref='paper',
+    yref='paper',
+    x=0.02,
+    y=1.1,
+    text=f'The majority ({round(n_ok / df.shape[0] * 100, ndigits=1)}%) of the aircrafts are fine...',
+    showarrow=False,
+    font=dict(
+        color='white',
+        size=24,
+        family='Open Sans'
+    )
+)
+
+#displaying the histogram plot
+st.plotly_chart(fig)
 
 st.code(
-'''#criando figure e axis    
-fig, ax = plt.subplots(figsize=(12,6))
-fig.tight_layout(pad=2)
-fig.suptitle(
-    'Distribuição das aeronaves conforme o tipo de uso', 
-    weight='bold',
-    size='x-large'
-    )
+'''# Create the pie plot using Plotly Express
+fig = px.pie(df, values=df['TYPE_OF_USE'].value_counts(), names=df['TYPE_OF_USE'].value_counts().index.tolist())
 
-#criando gráfico de pizza
-ax.pie(
-    df['TYPE_OF_USE'].value_counts(), 
-    startangle=315,
-    )
-
-#configurando atributos do gráfico
-fig.patch.set_alpha(0.3) 
-ax.axis('equal')    
-sns.despine(ax=ax)
-        
-#adicionando legenda
-fig.legend(
-    labels = df['TYPE_OF_USE'].value_counts().index.tolist(), 
-    loc = 'lower right'
+# Set pie plot attributes
+fig.update_layout(
+    title='Distribution of aircrafts by type of use',
+    title_font=dict(size=24, family='Open Sans'),
+    showlegend=True
     )'''
     )
 
-#criando figure e axis    
-fig, ax = plt.subplots(figsize=(12,6))
-fig.tight_layout(pad=2)
-fig.suptitle(
-    'Distribuição das aeronaves conforme o tipo de uso', 
-    weight='bold',
-    size='x-large'
+# Create the pie plot using Plotly Express
+fig = px.pie(df, values=df['TYPE_OF_USE'].value_counts(), names=df['TYPE_OF_USE'].value_counts().index.tolist())
+
+# Set pie plot attributes
+fig.update_layout(
+    title='Distribution of aircrafts by type of use',
+    title_font=dict(size=24, family='Open Sans'),
+    showlegend=True
     )
 
-#criando gráfico de pizza
-ax.pie(
-    df['TYPE_OF_USE'].value_counts(), 
-    startangle=315,
-    )
+# Display the plot
+st.plotly_chart(fig)
 
-#configurando atributos do gráfico
-fig.patch.set_alpha(0.6) 
-# fig.patch.set_facecolor('none') 
-# fig.patch.set_edgecolor('white')
-#fig.patch.set_linewidth(1)
-ax.axis('equal')  
-sns.despine(ax=ax)
-# for text in fig.findobj(plt.Text):
-#     if text.get_color() != 'white':
-#         text.set_color('white')
-        
-#adicionando legenda
-fig.legend(
-    labels = df['TYPE_OF_USE'].value_counts().index.tolist(), 
-    loc = 'lower right'
-    )
-
-percentage = df['TYPE_OF_USE'].value_counts() / df['TYPE_OF_USE'].value_counts().sum()
-st.markdown(f'>O tipo de uso mais frequente é o {percentage.index[0]}, registrado em {round(percentage[0] * 100, 1)}% dos registros.') 
-
-st.pyplot(fig)
-
+#TODO: rewrite text, leave insights to plot
 st.markdown(
-'''Para avançar no entendimento do uso das aeronaves, avaliou-se então a coluna `TYPE_OF_ACTIVITY`. Primeiramente, observou-se que a grande maioria dos drones registrados são destinados a atividades recreativas, sendo as atividades de 'fotografia e cinema' e 'engenharia' vindo logo após.
+'''To further the understanding of drone usage, the `TYPE_OF_ACTIVITY` column was then evaluated. First, it was observed that the vast majority of drones registered are intended for recreational activities, with 'photography and film' and 'engineering' activities coming soon after.
 
-Adicionalmente esses números ainda foram comparados com recém-criada a coluna `LEGAL_ENT`, onde verificou-se que as pessoas físicas são maioria em quase todas as atividades, com exceção da engenharia e da segurança.'''
+Additionally, these numbers were compared with the newly created `LEGAL_ENT` column, where it was found that individuals are the majority in almost all activities except engineering and security.'''
 )
 
 st.code(
-'''fig, ax = plt.subplots(figsize = (12,6))
-fig.tight_layout(pad=2)
-fig.suptitle(
-    'Distribuição das aeronaves conforme os ramos de atividade no SISANT', 
-    weight = 'bold'
-    )
+'''#create the histogram plot
+fig = px.histogram(df, y='TYPE_OF_ACTIVITY', color='LEGAL_ENT',
+                   category_orders={'TYPE_OF_ACTIVITY': df['TYPE_OF_ACTIVITY'].value_counts().iloc[:10].index},
+                   height=500)
 
-sns.countplot(
-    df, 
-    y = 'TYPE_OF_ACTIVITY', 
-    hue = 'LEGAL_ENT',
-    order = df['TYPE_OF_ACTIVITY'].value_counts().iloc[:10].index,
-    ax=ax
-    )
-
-ax.grid(axis = 'x', linestyle = '--')
-ax.yaxis.grid(False)
-ax.set(xlabel = None, ylabel = None)
-ax.legend(
-    loc = 'lower right',
-    labels = ['Pessoas físicas', 'Pessoas jurídicas']
-    )
-
-sns.despine(ax=ax)'''
+#setting histogram plot attributes
+fig.update_layout(
+    title='Distribution of aircrafts by the type of activity',
+    title_font=dict(size=24, family='Open Sans'),
+    xaxis=dict(title=None),
+    yaxis=dict(title=None)
+)'''
 )
 
-fig, ax = plt.subplots(figsize = (12,6))
-fig.tight_layout(pad=2)
-fig.suptitle(
-    'Distribuição das aeronaves conforme os ramos de atividade no SISANT', 
-    weight = 'bold'
-    )
+#create the histogram plot
+fig = px.histogram(df, y='TYPE_OF_ACTIVITY', color='LEGAL_ENT',
+                   category_orders={'TYPE_OF_ACTIVITY': df['TYPE_OF_ACTIVITY'].value_counts().iloc[:10].index},
+                   height=500)
 
-sns.countplot(
-    df, 
-    y = 'TYPE_OF_ACTIVITY', 
-    hue = 'LEGAL_ENT',
-    order = df['TYPE_OF_ACTIVITY'].value_counts().iloc[:10].index,
-    ax=ax
-    )
+#setting histogram plot attributes
+fig.update_layout(
+    title='Distribution of aircrafts by the type of activity',
+    title_font=dict(size=24, family='Open Sans'),
+    xaxis=dict(title=None),
+    yaxis=dict(title=None)
+)
 
-ax.grid(axis = 'x', linestyle = '--', color='black')
-#ax.yaxis.grid(False)
-
-ax.set(
-    xlabel = None, 
-    ylabel = None,
-    fc='none'
-    )
-
-ax.legend(
-    loc = 'lower right',
-    labels = ['Pessoas físicas', 'Pessoas jurídicas']
-    )
-
-fig.patch.set_alpha(0.6)
-sns.despine(ax=ax)
-
-st.pyplot(fig)
+#displaying plot
+st.plotly_chart(fig)
 
 st.markdown(
-'''Por fim, foram analisadas as questões relativas aos fabricantes e seus modelos de aeronaves. Primeiro utilizou-se um gráfico em formato "word cloud"(que basicamente exibe palavras de acordo com sua frequência (quanto maior a frequência, maior a palavra)) para visualizar a distribuição das fabricantes.'''
+'''Finally, the questions regarding manufacturers and their aircraft models were analyzed. First a word cloud plot was used (which basically displays words according to their frequency (the higher the frequency, the bigger the word)) to visualize the distribution of manufacturers.'''
 )
 
 st.code(
-'''#criando estrutura do gráfico
+'''#creating figure and axis
 fig, ax = plt.subplots(figsize=(12,6))
+fig.patch.set_alpha(0.0)
 
-#alterando atributos da figure
-fig.tight_layout(pad=2)
-fig.suptitle(
-    'Principais fabricantes das aeronaves no SISANT', 
-    weight='bold'
-    )
-
-#criando grafico word cloud para representar a frequência das fabricantes
+#creating word cloud
 wordcloud = WordCloud(
-    width=1200, height=600,
-    mode='RGBA', 
-    background_color='white',
-    #min_font_size=15,
+    width=1200, height=600, 
     colormap='tab10'
-    ).fit_words(
-        df['MANUFACTURER'].value_counts().to_dict()
+    ).generate_from_frequencies(
+        df['MANUFACTURER'].value_counts()
         )
 
-#alterando atributos do axis
+#setting axis attributes
 ax.axis("off")
-ax.imshow(wordcloud, interpolation='bilinear')''',
-language='python'
+ax.imshow(wordcloud, interpolation='bilinear')'''
 )
-
-#criando estrutura do gráfico
-fig, ax = plt.subplots(figsize=(12,6))
-
-#alterando atributos da figure
-fig.tight_layout(pad=2)
-fig.suptitle(
-    'Principais fabricantes das aeronaves no SISANT', 
-    weight='bold'
-    )
-fig.patch.set_alpha(0.6)
-
-#criando grafico word cloud para representar a frequência das fabricantes
-wordcloud = WordCloud(
-    width=1200, height=600,
-    mode='RGBA', 
-    background_color='white',
-    #min_font_size=15,
-    colormap='tab10'
-    ).fit_words(
-        df['MANUFACTURER'].value_counts().to_dict()
-        )
-
-#alterando atributos do axis
-ax.axis("off")
-ax.imshow(wordcloud, interpolation='bilinear')
-ax.set_facecolor('none')
-
 
 counts = df['MANUFACTURER'].value_counts()
 percentages = counts / counts.sum()
@@ -793,24 +680,40 @@ percentages = percentages.apply(
     lambda x: f'{round(x * 100, 1)}'
     )
 
+#creating figure and axis
+fig, ax = plt.subplots(figsize=(12,6))
+fig.patch.set_alpha(0.0)
+
+#creating word cloud
+wordcloud = WordCloud(
+    width=1200, height=600, 
+    colormap='tab10'
+    ).generate_from_frequencies(
+        df['MANUFACTURER'].value_counts()
+        )
+
+#setting axis attributes
+ax.axis("off")
+ax.imshow(wordcloud, interpolation='bilinear')
+
 st.pyplot(fig)
 
-st.markdown(f'>A maior fornecedora é {percentages.index[0].upper()}, com frequência de {percentages[0]}%.')
+#TODO: fix the percentages
+st.markdown(
+    f'The manufacturer that supplies most drones is {percentages.index[0].upper()}, as {percentages[0]}% of the drones were made by it. Its followed by {percentages.index[1].upper()} ({percentages[1]}%) and {percentages.index[2].upper()} ({percentages[2]}%). All the other manufacturers together represent {percentages[2:].astype(float).sum()}%.'
+)
 
-st.write(percentages.head())
-
-st.markdown('Foram então verificados quais os principais modelos de aeronaves fornecidas pela DJI nos dados do sistema. Para isso, a coluna `MODEL` foi finalmente pré-processada.')
+st.markdown('It was then checked which are the main aircraft models provided by DJI in the system data. For this, the `MODEL` column was finally preprocessed.')
 
 st.code(
-'''#criando subset contendo os drones fabricados pela dji
+'''#creating subset containing dji aircrafts
 dji_df = df.loc[df['MANUFACTURER']=='dji']
 
-#removendo espaços em branco
+#cleaning whitespaces
 dji_df['MODEL'] = dji_df['MODEL'].str.lower()
-dji_df['MODEL'] = dji_df['MODEL'].str.strip()
 dji_df['MODEL'] = dji_df['MODEL'].str.replace(" ", "")
 
-#criando dicionário de modelos
+#creating a model dictionary
 dji_model_map = {
     'mavic': 'mav|air|ma2ue3w|m1p|da2sue1|1ss5|u11x|rc231|m2e|l1p|enterprisedual',
     'phantom': 'phan|wm331a|p4p|w322b|p4mult|w323|wm332a|hanto',
@@ -825,44 +728,28 @@ dji_model_map = {
     'others': 'dji'
     }
 
-#novamente utilizando a função fix_names, dessa vez com argumentos
-#relativos a coluna MODEL
+applying the fix_names function to the MODEL column
 fix_names('MODEL', dji_model_map, dji_df)
 
-#renomeando modelos não reconhecidos como "others"
+#renaming unknown models as "others"
 dji_df.loc[~dji_df['MODEL'].isin(dji_df['MODEL'].value_counts().head(14).index), 'MODEL'] = 'others'
 
 dji_df['MODEL'] = dji_df['MODEL'].astype('category')
 
-#criando estrutura para o gráfico
-fig, ax = plt.subplots(figsize=(12,6))
-fig.tight_layout(pad=2)
-fig.suptitle(
-    'Distribuição dos modelos de aeronave fabricadas pela DJI no SISANT',
-    weight='bold'
+#creating the histogram plot
+fig = px.histogram(
+    dji_df, 
+    y='MODEL',
+    category_orders={'MODEL': dji_df['MODEL'].value_counts().iloc[:14].index}
     )
 
-#criando gráfico de barras
-sns.countplot(
-    y = dji_df['MODEL'],
-    order = dji_df['MODEL'].value_counts().iloc[:10].index,
-    ax=ax
-    )
-
-#adicionando grid
-ax.grid(
-    axis='x', 
-    linestyle='--'
-    )
-#ax.yaxis.grid(False)
-
-#alterando atributos do gráfico de barras
-ax.set(
-    xlabel=None,
-    ylabel=None,
-)
-sns.despine(ax=ax)''',
-language='python'
+#set histogram plot attributes
+fig.update_layout(
+    title='Distribution of aircraft models manufactured by DJI in SISANT',
+    title_font=dict(size=24),
+    xaxis=dict(title=None),
+    yaxis=dict(title=None),
+)'''
 )
 
 #criando subset contendo os drones fabricados pela dji
@@ -870,7 +757,6 @@ dji_df = df.loc[df['MANUFACTURER']=='dji']
 
 #removendo espaços em branco
 dji_df['MODEL'] = dji_df['MODEL'].str.lower()
-dji_df['MODEL'] = dji_df['MODEL'].str.strip()
 dji_df['MODEL'] = dji_df['MODEL'].str.replace(" ", "")
 
 #criando dicionário de modelos
@@ -897,179 +783,157 @@ dji_df.loc[~dji_df['MODEL'].isin(dji_df['MODEL'].value_counts().head(14).index),
 
 dji_df['MODEL'] = dji_df['MODEL'].astype('category')
 
-#criando estrutura para o gráfico
-fig, ax = plt.subplots(figsize=(12,6))
-fig.tight_layout(pad=2)
-fig.suptitle(
-    'Distribuição dos modelos de aeronave fabricadas pela DJI no SISANT',
-    weight='bold'
-    )
-fig.patch.set_alpha(0.6)
-
-#criando gráfico de barras
-sns.countplot(
-    y = dji_df['MODEL'],
-    order = dji_df['MODEL'].value_counts().iloc[:10].index,
-    ax=ax
+#creating the histogram plot
+fig = px.histogram(
+    dji_df, 
+    y='MODEL',
+    category_orders={'MODEL': dji_df['MODEL'].value_counts().iloc[:14].index}
     )
 
-#adicionando grid
-ax.grid(
-    axis='x', 
-    linestyle='--',
-    color='black'
-    )
-#ax.yaxis.grid(False)
-
-#alterando atributos do gráfico de barras
-ax.set(
-    xlabel=None,
-    ylabel=None,
-    fc='none'
+#set histogram plot attributes
+fig.update_layout(
+    title='Distribution of aircraft models manufactured by DJI in SISANT',
+    title_font=dict(size=24),
+    xaxis=dict(title=None),
+    yaxis=dict(title=None),
 )
 
-sns.despine(ax=ax)
-
-st.pyplot(fig)
-
-
+# Display the plot
+st.plotly_chart(fig)
 
 st.markdown('Quais as marcas preferidas dos PF e dos PJ?')
 
 st.code(
-'''#criando subsets baseados na coluna LEGAL_ENT
-pf_df = df.loc[df['LEGAL_ENT']=='PF', 'MANUFACTURER']
-pj_df = df.loc[df['LEGAL_ENT']=='PJ', 'MANUFACTURER']
+'''#creating subsets based on the LEGAL_ENT column
+ind_df = df.loc[df['LEGAL_ENT'] == 'individual', 'MANUFACTURER']
+co_df = df.loc[df['LEGAL_ENT'] == 'company', 'MANUFACTURER']
 
-#criando estrutura dos gráficos
-fig, axs = plt.subplots(1, 2, figsize=(12,6), sharey=True)
-fig.suptitle(
-    'Distribuição das fabricantes de aeronaves conforme a natureza jurídica do operador', 
-    weight='bold'
-    )
-fig.tight_layout(pad=2)
-
-#criando gráfico de barras 1 (pessoas físicas)
-sns.countplot(
-    x=pf_df, 
-    order=pf_df.value_counts().iloc[:7].index, 
-    ax=axs[0]
+#creating figure and subplots
+fig = sp.make_subplots(
+    rows=1, 
+    cols=2, 
+    subplot_titles=('individuals', 'companies'), 
+    shared_yaxes=True
     )
 
-#adicionando labels contendo seu respectivo valor a cada uma das barras
-for bar in axs[0].patches:
-    height = bar.get_height()
-    axs[0].annotate(
-        text=f"{int(height)}", 
-        xy=(bar.get_x() + bar.get_width() / 2, height),
-        ha='center',
-        va='bottom'
+#creating the first histogram plot (individuals)
+fig.add_trace(
+    go.Bar(
+        x=ind_df.value_counts().iloc[:7].index,
+        y=ind_df.value_counts().iloc[:7],
+        marker_color='lightskyblue'),
+    row=1,
+    col=1
+    )
+
+#adding labels to each bar for individuals plot
+for i, count in enumerate(ind_df.value_counts().iloc[:7]):
+    fig.add_annotation(
+        x=ind_df.value_counts().iloc[:7].index[i],
+        y=count,
+        text=str(count),
+        showarrow=False,
+        font=dict(size=12),
+        xanchor='center',
+        yanchor='bottom'
         )
 
-#alterando atributos do gráfico 1   
-axs[0].set(
-    xlabel=None, 
-    ylabel=None,
-    title='PF'
+#creating the second histogram plot (companies)
+fig.add_trace(
+    go.Bar(
+        x=co_df.value_counts().iloc[:7].index,
+        y=co_df.value_counts().iloc[:7],
+        marker_color='lightgreen'),
+    row=1, 
+    col=2
     )
 
-sns.despine(ax=axs[0])
-
-#criando gráfico de barras 2 (pessoas jurídicas)    
-sns.countplot(
-    x=pj_df, 
-    order=pj_df.value_counts().iloc[:7].index, 
-    ax=axs[1]
-    )
-
-#adicionando labels
-for bar in axs[1].patches:
-    height = bar.get_height()
-    axs[1].annotate(
-        text=f"{int(height)}", 
-        xy=(bar.get_x() + bar.get_width() / 2, height),
-        ha='center', 
-        va='bottom'
+#adding labels to each bar for companies plot
+for i, count in enumerate(co_df.value_counts().iloc[:7]):
+    fig.add_annotation(
+        x=co_df.value_counts().iloc[:7].index[i],
+        y=count,
+        text=str(count),
+        showarrow=False,
+        font=dict(size=12),
+        xanchor='center',
+        yanchor='bottom'
         )
 
-#alterando atributos do gráfico 2
-axs[1].set(
-    xlabel=None, 
-    ylabel=None,
-    title='PJ'
-    )
-
-sns.despine(ax=axs[1])'''
+#updating layout and axis labels
+fig.update_layout(
+    title='Distribution of aircraft manufacturers by legal nature',
+    title_font=dict(size=24),
+    showlegend=False,
+    yaxis=dict(title=None),
+    yaxis2=dict(title=None)
+    )'''
 )
 
-#criando subsets baseados na coluna LEGAL_ENT
-ind_df = df.loc[df['LEGAL_ENT']=='individual', 'MANUFACTURER']
-co_df = df.loc[df['LEGAL_ENT']=='company', 'MANUFACTURER']
+#creating subsets based on the LEGAL_ENT column
+ind_df = df.loc[df['LEGAL_ENT'] == 'individual', 'MANUFACTURER']
+co_df = df.loc[df['LEGAL_ENT'] == 'company', 'MANUFACTURER']
 
-#criando estrutura dos gráficos
-fig, axs = plt.subplots(1, 2, figsize=(12,6), sharey=True)
-fig.suptitle(
-    'Distribuição das fabricantes de aeronaves conforme natureza jurídica', 
-    weight='bold'
-    )
-fig.tight_layout(pad=2)
-fig.patch.set_alpha(0.6)
-
-#criando gráfico de barras 1 (pessoas físicas)
-sns.countplot(
-    x=ind_df, 
-    order=ind_df.value_counts().iloc[:7].index, 
-    ax=axs[0]
+#creating figure and subplots
+fig = sp.make_subplots(
+    rows=1, 
+    cols=2, 
+    subplot_titles=('individuals', 'companies'), 
+    shared_yaxes=True
     )
 
-#adicionando labels contendo seu respectivo valor a cada uma das barras
-for bar in axs[0].patches:
-    height = bar.get_height()
-    axs[0].annotate(
-        text=f"{int(height)}", 
-        xy=(bar.get_x() + bar.get_width() / 2, height),
-        ha='center',
-        va='bottom'
+#creating the first histogram plot (individuals)
+fig.add_trace(
+    go.Bar(
+        x=ind_df.value_counts().iloc[:7].index,
+        y=ind_df.value_counts().iloc[:7],               marker_color='lightskyblue'),
+    row=1,
+    col=1
+    )
+
+#adding labels to each bar for individuals plot
+for i, count in enumerate(ind_df.value_counts().iloc[:7]):
+    fig.add_annotation(
+        x=ind_df.value_counts().iloc[:7].index[i],
+        y=count,
+        text=str(count),
+        showarrow=False,
+        font=dict(size=12),
+        xanchor='center',
+        yanchor='bottom'
         )
 
-#alterando atributos do gráfico 1   
-axs[0].set(
-    xlabel=None, 
-    ylabel=None,
-    title='PF',
-    fc='none'
+#creating the second histogram plot (companies)
+fig.add_trace(
+    go.Bar(
+        x=co_df.value_counts().iloc[:7].index,
+        y=co_df.value_counts().iloc[:7],                   marker_color='lightgreen'),
+    row=1, 
+    col=2
     )
 
-sns.despine(ax=axs[0])
-
-#criando gráfico de barras 2 (pessoas jurídicas)    
-sns.countplot(
-    x=co_df, 
-    order=co_df.value_counts().iloc[:7].index, 
-    ax=axs[1]
-    )
-
-#adicionando labels
-for bar in axs[1].patches:
-    height = bar.get_height()
-    axs[1].annotate(
-        text=f"{int(height)}", 
-        xy=(bar.get_x() + bar.get_width() / 2, height),
-        ha='center', 
-        va='bottom'
+#adding labels to each bar for companies plot
+for i, count in enumerate(co_df.value_counts().iloc[:7]):
+    fig.add_annotation(
+        x=co_df.value_counts().iloc[:7].index[i],
+        y=count,
+        text=str(count),
+        showarrow=False,
+        font=dict(size=12),
+        xanchor='center',
+        yanchor='bottom'
         )
 
-#alterando atributos do gráfico 2
-axs[1].set(
-    xlabel=None, 
-    ylabel=None,
-    title='PJ',
-    fc='none'
+#updating layout and axis labels
+fig.update_layout(
+    title='Distribution of aircraft manufacturers by legal nature',   title_font=dict(size=24),
+    showlegend=False,
+    yaxis=dict(title=None),
+    yaxis2=dict(title=None)
     )
 
-sns.despine(ax=axs[1])
-
-st.pyplot(fig)
+#displaying
+st.plotly_chart(fig)
 
 
 
