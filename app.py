@@ -9,7 +9,7 @@ from re import match
 from wordcloud import WordCloud
 
 pd.options.mode.chained_assignment = None
-st.set_page_config(page_title="caioems - Aircrafts in SISANT (ANAC)")
+st.set_page_config(page_title="Aircrafts of SISANT (ANAC) - by Caio Souza")
 
 with open('style.css') as css:
     st.markdown(
@@ -22,7 +22,7 @@ with open('style.css') as css:
 # unsafe_allow_html=True
 # )
 
-st.header('''Database analysis of aircrafts registered in the System of Unmanned Aircraft (SISANT) of the National Civil Aviation Agency of Brazil (ANAC)
+st.header('''Analysis of the aircraft database of the National Civil Aviation Agency of Brazil's (ANAC) System of Unmanned Aircraft (SISANT).
 _____''')
 
 st.markdown('''The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for the use of airspace, as well as methods for the registration and regulation of these aircraft, is still being built. SISANT is a national system that collects information about the aircraft's owner (operator), as well as the activities for which it is employed. The aircraft owner is responsible for the data submitted, and he can only legally operate a UAV after its registering.'''
@@ -68,8 +68,7 @@ def load_data():
 df = load_data()'''
 )
 
-#loading and visualizing the data 
-#@st.cache_data
+#loading data, dropping NAs and renaming columns
 def load_data():
     url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
 
@@ -119,7 +118,7 @@ st.markdown(
     - Advanced use (Class 2 UAV and other Class 3): PS-XXXXXXXXX;  
     - Note: each X represents a number from 0 to 9.
 
-- `EXPIRATION_DATE`: Expiration date, same as the date the registration was made or renewed (for another two years).  
+- `EXPIRATION_DATE`: the date when the two-year validity period expires.  
 
 - `OPERATOR`: Name of the person responsible for operating the drone.
 
@@ -170,10 +169,6 @@ df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.replace(" ", "")
 
 #removing duplicates
 df = df.drop_duplicates(subset=['AIRCRAFT_ID'], keep='first')
-
-
-# dupl = df[df.duplicated(subset=['AIRCRAFT_ID'], keep=False)]
-# print(dupl.sort_values(by=['AIRCRAFT_ID']).head())
 
 st.markdown(
 '''Next, the column was also checked for values that did not follow the digit patterns presented in the dataset metadata.  
@@ -503,7 +498,7 @@ fig = px.line(
     agg_data, 
     x='REG_DATE', 
     y='OPERATOR', 
-    title='Monthly registrations',
+    title='Monthly new registrations',
     labels={'REG_DATE': '', 'OPERATOR': 'new registers'}
     )
 
@@ -559,7 +554,7 @@ fig = px.line(
     )
 
 st.plotly_chart(fig)
-
+#TODO: move anotation to the right side, maybe put an arrow
 #creating histogram plot
 fig = px.histogram(
     df,
@@ -600,8 +595,8 @@ fig.update_layout(
     showlegend=True
     )'''
     )
-
-# Create the pie plot using Plotly Express
+#TODO: change pie plot to another kind
+#creating the pie plot
 fig = px.pie(df, values=df['TYPE_OF_USE'].value_counts(), names=df['TYPE_OF_USE'].value_counts().index.tolist())
 
 # Set pie plot attributes
@@ -635,7 +630,7 @@ fig.update_layout(
     yaxis=dict(title=None)
 )'''
 )
-
+#TODO: move legend to the bottom right side, change its title
 #create the histogram plot
 fig = px.histogram(df, y='TYPE_OF_ACTIVITY', color='LEGAL_ENT',
                    category_orders={'TYPE_OF_ACTIVITY': df['TYPE_OF_ACTIVITY'].value_counts().iloc[:10].index},
@@ -698,7 +693,7 @@ ax.imshow(wordcloud, interpolation='bilinear')
 
 st.pyplot(fig)
 
-#TODO: fix the percentages
+#TODO: fix the percentages and spotlight the paragraph
 st.markdown(
     f'The manufacturer that supplies most drones is {percentages.index[0].upper()}, as {percentages[0]}% of the drones were made by it. Its followed by {percentages.index[1].upper()} ({percentages[1]}%) and {percentages.index[2].upper()} ({percentages[2]}%). All the other manufacturers together represent {percentages[2:].astype(float).sum()}%.'
 )
@@ -787,7 +782,8 @@ dji_df['MODEL'] = dji_df['MODEL'].astype('category')
 fig = px.histogram(
     dji_df, 
     y='MODEL',
-    category_orders={'MODEL': dji_df['MODEL'].value_counts().iloc[:14].index}
+    category_orders={'MODEL': dji_df['MODEL'].value_counts().iloc[:14].index},
+    text_auto=True
     )
 
 #set histogram plot attributes
@@ -801,7 +797,7 @@ fig.update_layout(
 # Display the plot
 st.plotly_chart(fig)
 
-st.markdown('Quais as marcas preferidas dos PF e dos PJ?')
+st.markdown('Which brands do individuals and companies prefer?')
 
 st.code(
 '''#creating subsets based on the LEGAL_ENT column
@@ -821,44 +817,24 @@ fig.add_trace(
     go.Bar(
         x=ind_df.value_counts().iloc[:7].index,
         y=ind_df.value_counts().iloc[:7],
-        marker_color='lightskyblue'),
+        marker_color='lightskyblue',
+        text=ind_df.value_counts().iloc[:7],
+        ),
     row=1,
     col=1
     )
-
-#adding labels to each bar for individuals plot
-for i, count in enumerate(ind_df.value_counts().iloc[:7]):
-    fig.add_annotation(
-        x=ind_df.value_counts().iloc[:7].index[i],
-        y=count,
-        text=str(count),
-        showarrow=False,
-        font=dict(size=12),
-        xanchor='center',
-        yanchor='bottom'
-        )
 
 #creating the second histogram plot (companies)
 fig.add_trace(
     go.Bar(
         x=co_df.value_counts().iloc[:7].index,
         y=co_df.value_counts().iloc[:7],
-        marker_color='lightgreen'),
+        marker_color='lightgreen',
+        text=co_df.value_counts().iloc[:7],
+        ),
     row=1, 
     col=2
     )
-
-#adding labels to each bar for companies plot
-for i, count in enumerate(co_df.value_counts().iloc[:7]):
-    fig.add_annotation(
-        x=co_df.value_counts().iloc[:7].index[i],
-        y=count,
-        text=str(count),
-        showarrow=False,
-        font=dict(size=12),
-        xanchor='center',
-        yanchor='bottom'
-        )
 
 #updating layout and axis labels
 fig.update_layout(
@@ -886,47 +862,30 @@ fig = sp.make_subplots(
 fig.add_trace(
     go.Bar(
         x=ind_df.value_counts().iloc[:7].index,
-        y=ind_df.value_counts().iloc[:7],               marker_color='lightskyblue'),
+        y=ind_df.value_counts().iloc[:7],
+        marker_color='lightskyblue',
+        text=ind_df.value_counts().iloc[:7],
+        ),
     row=1,
     col=1
     )
-
-#adding labels to each bar for individuals plot
-for i, count in enumerate(ind_df.value_counts().iloc[:7]):
-    fig.add_annotation(
-        x=ind_df.value_counts().iloc[:7].index[i],
-        y=count,
-        text=str(count),
-        showarrow=False,
-        font=dict(size=12),
-        xanchor='center',
-        yanchor='bottom'
-        )
 
 #creating the second histogram plot (companies)
 fig.add_trace(
     go.Bar(
         x=co_df.value_counts().iloc[:7].index,
-        y=co_df.value_counts().iloc[:7],                   marker_color='lightgreen'),
+        y=co_df.value_counts().iloc[:7],
+        marker_color='lightgreen',
+        text=co_df.value_counts().iloc[:7],
+        ),
     row=1, 
     col=2
     )
 
-#adding labels to each bar for companies plot
-for i, count in enumerate(co_df.value_counts().iloc[:7]):
-    fig.add_annotation(
-        x=co_df.value_counts().iloc[:7].index[i],
-        y=count,
-        text=str(count),
-        showarrow=False,
-        font=dict(size=12),
-        xanchor='center',
-        yanchor='bottom'
-        )
-
 #updating layout and axis labels
 fig.update_layout(
-    title='Distribution of aircraft manufacturers by legal nature',   title_font=dict(size=24),
+    title='Distribution of aircraft manufacturers by legal nature',
+    title_font=dict(size=24),
     showlegend=False,
     yaxis=dict(title=None),
     yaxis2=dict(title=None)
