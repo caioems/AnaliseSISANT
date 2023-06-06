@@ -597,7 +597,11 @@ fig.update_layout(
     )
 #TODO: change pie plot to another kind
 #creating the pie plot
-fig = px.pie(df, values=df['TYPE_OF_USE'].value_counts(), names=df['TYPE_OF_USE'].value_counts().index.tolist())
+fig = px.pie(
+    df, 
+    values=df['TYPE_OF_USE'].value_counts(), 
+    names=df['TYPE_OF_USE'].value_counts().index.tolist()
+    )
 
 # Set pie plot attributes
 fig.update_layout(
