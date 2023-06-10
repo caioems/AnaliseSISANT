@@ -573,7 +573,7 @@ fig.add_annotation(
     yref='paper',
     x=0,
     y=1.1,
-    text='Compliance with the system has increased over the time.',
+    text="Compliance with the system has increased over the time.",
     showarrow=False,
     font=dict(
         color='white',
@@ -588,7 +588,7 @@ fig.add_annotation(
     yref='paper',
     x=0.02,
     y=1,
-    text='This month, 12354 new registers have already been made.',
+    text=f"This month, {agg_data['EXPIRATION_DATE'].iloc[-1]} new registers have already been made.",
     showarrow=False,
     font=dict(
         color='white',
