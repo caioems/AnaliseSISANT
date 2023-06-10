@@ -307,6 +307,7 @@ st.write(df[['LEGAL_ENT', 'ENT_NUM']])
 #converting dtype
 df['TYPE_OF_USE'] = df['TYPE_OF_USE'].astype('category')
 
+
 st.markdown(
 '''The columns `MANUFACTURER` and `MODEL` needed more attention because, as they contain text input, they may have different values for the same category.
   
@@ -511,7 +512,11 @@ fig = px.histogram(
 )
 
 #removing legend
-fig.update_layout(showlegend=False)
+fig.update_layout(
+    showlegend=False,
+    xaxis=dict(title=f'There was {n_inact} inactive registers.'),
+    yaxis=dict(title=None)
+    )
 
 #adding an annotation
 fig.add_annotation(
@@ -519,11 +524,26 @@ fig.add_annotation(
     yref='paper',
     x=0.02,
     y=1.1,
-    text=f'The majority ({round(n_ok / df.shape[0] * 100, ndigits=1)}%) of the aircrafts are fine...',
+    text=f'Most of the aircrafts ({round(n_ok / df.shape[0] * 100, ndigits=1)}%) are fine...',
     showarrow=False,
     font=dict(
         color='white',
-        size=24,
+        size=20,
+        family='Open Sans'
+    )
+)
+
+#adding another annotation
+fig.add_annotation(
+    xref='paper',
+    yref='paper',
+    x=0.95,
+    y=0.2,
+    text=f'...whilst {round(n_renew / df.shape[0] * 100, ndigits=1)}% needs renewal.',
+    showarrow=False,
+    font=dict(
+        color='white',
+        size=20,
         family='Open Sans'
     )
 )'''
@@ -538,23 +558,47 @@ n_inact = df[df['STATUS']=='inactive'].shape[0]
 n_renew = df[df['STATUS']=='renew'].shape[0]
 n_ok = df[df['STATUS']=='ok'].shape[0]
 
-st.markdown(
-f'''>Considering the total number of registrations ({df.shape[0]}):
->- {n_inact} ({round(n_inact / df.shape[0] * 100, ndigits=1)}%) are inactive;
->- {n_renew} ({round(n_renew / df.shape[0] * 100, ndigits=1)}%) need to be renewed; and
->- {n_ok} ({round(n_ok / df.shape[0] * 100, ndigits=1)}%) are up to date.''')
-
 #creating and displaying line plot
 fig = px.line(
     agg_data, 
     x='REG_DATE', 
     y='OPERATOR', 
-    title='Monthly registrations',
+    title=None,
     labels={'REG_DATE': '', 'OPERATOR': 'new registers'}
     )
 
+#adding an annotation
+fig.add_annotation(
+    xref='paper',
+    yref='paper',
+    x=0,
+    y=1.1,
+    text='Compliance with the system has increased over the time.',
+    showarrow=False,
+    font=dict(
+        color='white',
+        size=22,
+        family='Open Sans'
+    )
+)
+
+#adding another annotation
+fig.add_annotation(
+    xref='paper',
+    yref='paper',
+    x=0.02,
+    y=1,
+    text='This month, 12354 new registers have already been made.',
+    showarrow=False,
+    font=dict(
+        color='white',
+        size=16,
+        family='Open Sans'
+    )
+)
+
 st.plotly_chart(fig)
-#TODO: move anotation to the right side, maybe put an arrow
+
 #creating histogram plot
 fig = px.histogram(
     df,
@@ -564,7 +608,11 @@ fig = px.histogram(
 )
 
 #removing legend
-fig.update_layout(showlegend=False)
+fig.update_layout(
+    showlegend=False,
+    xaxis=dict(title=f'There was {n_inact} inactive registers.'),
+    yaxis=dict(title=None)
+    )
 
 #adding an annotation
 fig.add_annotation(
@@ -572,11 +620,26 @@ fig.add_annotation(
     yref='paper',
     x=0.02,
     y=1.1,
-    text=f'The majority ({round(n_ok / df.shape[0] * 100, ndigits=1)}%) of the aircrafts are fine...',
+    text=f'Most of the aircrafts ({round(n_ok / df.shape[0] * 100, ndigits=1)}%) are fine...',
     showarrow=False,
     font=dict(
         color='white',
-        size=24,
+        size=20,
+        family='Open Sans'
+    )
+)
+
+#adding another annotation
+fig.add_annotation(
+    xref='paper',
+    yref='paper',
+    x=0.95,
+    y=0.2,
+    text=f'...whilst {round(n_renew / df.shape[0] * 100, ndigits=1)}% needs renewal.',
+    showarrow=False,
+    font=dict(
+        color='white',
+        size=20,
         family='Open Sans'
     )
 )
@@ -585,32 +648,27 @@ fig.add_annotation(
 st.plotly_chart(fig)
 
 st.code(
-'''# Create the pie plot using Plotly Express
-fig = px.pie(df, values=df['TYPE_OF_USE'].value_counts(), names=df['TYPE_OF_USE'].value_counts().index.tolist())
+'''#calculate the value counts for each type of use
+value_counts = df['TYPE_OF_USE'].value_counts()
 
-# Set pie plot attributes
-fig.update_layout(
-    title='Distribution of aircrafts by type of use',
-    title_font=dict(size=24, family='Open Sans'),
-    showlegend=True
+#create a funnel plot
+fig = px.funnel(
+    df, 
+    x=value_counts.values, 
+    y=value_counts.index
     )'''
     )
-#TODO: change pie plot to another kind
-#creating the pie plot
-fig = px.pie(
+#TODO: add annotations with insights, format labels
+#calculate the value counts for each type of use
+value_counts = df['TYPE_OF_USE'].value_counts()
+
+#create a funnel plot
+fig = px.funnel(
     df, 
-    values=df['TYPE_OF_USE'].value_counts(), 
-    names=df['TYPE_OF_USE'].value_counts().index.tolist()
+    x=value_counts.values, 
+    y=value_counts.index
     )
 
-# Set pie plot attributes
-fig.update_layout(
-    title='Distribution of aircrafts by type of use',
-    title_font=dict(size=24, family='Open Sans'),
-    showlegend=True
-    )
-
-# Display the plot
 st.plotly_chart(fig)
 
 #TODO: rewrite text, leave insights to plot
