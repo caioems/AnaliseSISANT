@@ -50,7 +50,6 @@ from wordcloud import WordCloud'''
 
 st.code(
 '''#loading and visualizing the data 
-@st.cache_data
 def load_data():
     url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
 
@@ -658,20 +657,44 @@ fig = px.funnel(
     y=value_counts.index
     )'''
     )
-#TODO: add annotations with insights, format labels
+#TODO: fix annotation position
 #calculate the value counts for each type of use
 value_counts = df['TYPE_OF_USE'].value_counts()
 
 #create a funnel plot
-fig = px.funnel(
+fig = px.funnel_area(
     df, 
-    x=value_counts.values, 
-    y=value_counts.index
+    values=value_counts.values, 
+    names=value_counts.index
     )
+
+# Add annotation and arrow
+fig.add_annotation(
+    xref='paper',
+    yref='paper',
+    #axref='paper',
+    #ayref='paper',
+    x=0.6,
+    y=0.02,
+    ax=0.85,
+    ay=0.02,
+    text='teste',
+    #text='In the entire dataset only<br>14<br>aircraft are categorized as advanced.',
+    showarrow=True,
+    font=dict(
+        color='white',
+        size=20,
+        family='Open Sans'
+    ),
+    arrowhead=2, 
+    arrowsize=1,
+    arrowwidth=2
+)
 
 st.plotly_chart(fig)
 
 #TODO: rewrite text, leave insights to plot
+#"most of the drones were registered"
 st.markdown(
 '''To further the understanding of drone usage, the `TYPE_OF_ACTIVITY` column was then evaluated. First, it was observed that the vast majority of drones registered are intended for recreational activities, with 'photography and film' and 'engineering' activities coming soon after.
 
@@ -692,18 +715,48 @@ fig.update_layout(
     yaxis=dict(title=None)
 )'''
 )
-#TODO: move legend to the bottom right side, change its title
+#TODO: inserir subtitulo/anotacao sob o grafico
 #create the histogram plot
-fig = px.histogram(df, y='TYPE_OF_ACTIVITY', color='LEGAL_ENT',
-                   category_orders={'TYPE_OF_ACTIVITY': df['TYPE_OF_ACTIVITY'].value_counts().iloc[:10].index},
-                   height=500)
+fig = px.histogram(
+    df,
+    y='TYPE_OF_ACTIVITY',
+    color='LEGAL_ENT',
+    category_orders={'TYPE_OF_ACTIVITY': df['TYPE_OF_ACTIVITY'].value_counts().iloc[:10].index},
+    height=500
+    )
 
 #setting histogram plot attributes
 fig.update_layout(
-    title='Distribution of aircrafts by the type of activity',
-    title_font=dict(size=24, family='Open Sans'),
+    title=dict(
+        text='Recreational drones are in the majority,',
+        font=dict(
+            size=24,
+            family='Open Sans'
+            )
+        ),
+    legend=dict(
+        title=None,
+        xanchor='right',
+        yanchor='bottom', 
+        x=0.92,
+        y=0.05,
+        ),
     xaxis=dict(title=None),
     yaxis=dict(title=None)
+)
+
+fig.add_annotation(
+    xref='paper',
+    yref='paper',
+    x=-0.12,
+    y=1.08,
+    text="and this is the favorite activity of the individuals.",
+    showarrow=False,
+    font=dict(
+        color='white',
+        size=16,
+        family='Open Sans'
+    )
 )
 
 #displaying plot
