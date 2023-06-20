@@ -22,7 +22,7 @@ with open('style.css') as css:
 # unsafe_allow_html=True
 # )
 
-st.header('''Analysis of the aircraft database of the National Civil Aviation Agency of Brazil's (ANAC) System of Unmanned Aircraft (SISANT).
+st.header('''Analysis of the unmaned aircraft database of the National Civil Aviation Agency of Brazil
 _____''')
 
 st.markdown('''The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for the use of airspace, as well as methods for the registration and regulation of these aircraft, is still being built. SISANT is a national system that collects information about the aircraft's owner (operator), as well as the activities for which it is employed. The aircraft owner is responsible for the data submitted, and he can only legally operate a UAV after its registering.'''
@@ -650,45 +650,124 @@ st.code(
 '''#calculate the value counts for each type of use
 value_counts = df['TYPE_OF_USE'].value_counts()
 
-#create a funnel plot
-fig = px.funnel(
-    df, 
-    x=value_counts.values, 
-    y=value_counts.index
-    )'''
+#creating an indicator chart
+fig = go.Figure(go.Indicator(
+    mode="number",
+    title=dict(text='Currently,'),
+    value=value_counts.values[0] / value_counts.sum() * 100,
+    number=dict(
+        suffix='%', 
+        font=dict(
+            family='Open Sans', 
+            size=96
+            )
+        ),
+    domain=dict(x=[0,1], y=[0.6, 1])
     )
-#TODO: fix annotation position
-#calculate the value counts for each type of use
-value_counts = df['TYPE_OF_USE'].value_counts()
+)
 
-#create a funnel plot
-fig = px.funnel_area(
-    df, 
-    values=value_counts.values, 
-    names=value_counts.index
-    )
-
-# Add annotation and arrow
+#adding text to the chart
 fig.add_annotation(
     xref='paper',
     yref='paper',
-    #axref='paper',
-    #ayref='paper',
-    x=0.6,
-    y=0.02,
-    ax=0.85,
-    ay=0.02,
-    text='teste',
-    #text='In the entire dataset only<br>14<br>aircraft are categorized as advanced.',
-    showarrow=True,
+    xanchor='center',
+    yanchor='middle',
+    x=0.5,
+    y=0.5,
+    text="of the aircrafts are in basic operations<br><span style='color:gray'>(up to 25 kg, operated within line of sight and below 400 ft).</span>",
     font=dict(
         color='white',
         size=20,
         family='Open Sans'
-    ),
-    arrowhead=2, 
-    arrowsize=1,
-    arrowwidth=2
+        ),
+    showarrow=False
+)
+
+#adding more text to the chart
+fig.add_annotation(
+    xref='paper',
+    yref='paper',
+    xanchor='center',
+    yanchor='middle',
+    x=0.5,
+    y=0.01,
+    text=f"<span style='color:gray'>There are only</span><br><br><span style='font-size:48px'>{value_counts.values[1]}</span><br>UAVs registered for advanced operations.",
+    font=dict(
+        color='white',
+        size=20,
+        family='Open Sans'
+        ),
+    showarrow=False
+)
+
+#setting the chart's background to transparent
+fig.update_layout(
+    dict(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
+        )
+)'''
+)
+
+#calculate the value counts for each type of use
+value_counts = df['TYPE_OF_USE'].value_counts()
+
+#creating an indicator chart
+fig = go.Figure(go.Indicator(
+    mode="number",
+    title=dict(text='Currently,'),
+    value=value_counts.values[0] / value_counts.sum() * 100,
+    number=dict(
+        suffix='%', 
+        font=dict(
+            family='Open Sans', 
+            size=96
+            )
+        ),
+    domain=dict(x=[0,1], y=[0.6, 1])
+    )
+)
+
+#adding text to the chart
+fig.add_annotation(
+    xref='paper',
+    yref='paper',
+    xanchor='center',
+    yanchor='middle',
+    x=0.5,
+    y=0.5,
+    text="of the aircrafts are in basic operations<br><span style='color:gray'>(up to 25 kg, operated within line of sight and below 400 ft).</span>",
+    font=dict(
+        color='white',
+        size=20,
+        family='Open Sans'
+        ),
+    showarrow=False
+)
+
+#adding more text to the chart
+fig.add_annotation(
+    xref='paper',
+    yref='paper',
+    xanchor='center',
+    yanchor='middle',
+    x=0.5,
+    y=0.01,
+    text=f"<span style='color:gray'>There are only</span><br><br><span style='font-size:48px'>{value_counts.values[1]}</span><br>UAVs registered for advanced operations.",
+    font=dict(
+        color='white',
+        size=20,
+        family='Open Sans'
+        ),
+    showarrow=False
+)
+
+#setting the chart's background to transparent
+fig.update_layout(
+    dict(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
+        )
 )
 
 st.plotly_chart(fig)
@@ -748,7 +827,7 @@ fig.update_layout(
 fig.add_annotation(
     xref='paper',
     yref='paper',
-    x=-0.12,
+    x=0.01,
     y=1.08,
     text="and this is the favorite activity of the individuals.",
     showarrow=False,
