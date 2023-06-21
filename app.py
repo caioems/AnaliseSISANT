@@ -11,17 +11,21 @@ from wordcloud import WordCloud
 pd.options.mode.chained_assignment = None
 st.set_page_config(page_title="Aircrafts of SISANT (ANAC) - by Caio Souza")
 
+#loading CSS style
 with open('style.css') as css:
     st.markdown(
         f'<style>{css.read()}</style>',
         unsafe_allow_html=True
     )
 
-# st.markdown(
-# '<div class="header"><h1>Aeronaves no SISANT (ANAC)</h1></div>',
-# unsafe_allow_html=True
-# )
+#setting up the sidebar
+st.sidebar.markdown("# Sections")
+st.sidebar.markdown("""<a href="#analysis-of-the-unmaned-aircraft-database-of-the-national-civil-aviation-agency-of-brazil">Introduction</a>""", unsafe_allow_html=True)
+st.sidebar.markdown("""<a href="#dataframe-metadata">Dataframe metadata</a>""", unsafe_allow_html=True)
+st.sidebar.markdown("""<a href="#data-pre-processing">Data pre-processing</a>""", unsafe_allow_html=True)
+st.sidebar.markdown("""<a href="#exploratory-dataframe-analysis">Exploratory data analysis</a>""", unsafe_allow_html=True)
 
+#creating the document
 st.header('''Analysis of the unmaned aircraft database of the National Civil Aviation Agency of Brazil
 _____''')
 
@@ -304,7 +308,10 @@ df = df.drop(('CPF_CNPJ'), axis=1)
 st.write(df[['LEGAL_ENT', 'ENT_NUM']])
 
 #converting dtype
-df['TYPE_OF_USE'] = df['TYPE_OF_USE'].astype('category')
+df['TYPE_OF_USE'] = df['TYPE_OF_USE'].apply(
+    lambda x: 'basic' if x == 'Básico' else 'advanced'
+).astype('category')
+#df['TYPE_OF_USE'] = df['TYPE_OF_USE'].astype('category')
 
 
 st.markdown(
@@ -437,6 +444,7 @@ act_map = {
     'photo&film': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
     'logistics': 'transport|carga|delivery',
     'publicity': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
+    'recreative': 'recreativo',
     'safety': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
     }
 
@@ -646,6 +654,8 @@ fig.add_annotation(
 #displaying the histogram plot
 st.plotly_chart(fig)
 
+st.markdown("Now, through the `TYPE_OF_USE` column, we will check how the drones perform their activities, in other words, how each drone is operated. The possible categories are 'basic' and 'advanced'. ")
+
 st.code(
 '''#calculate the value counts for each type of use
 value_counts = df['TYPE_OF_USE'].value_counts()
@@ -772,29 +782,55 @@ fig.update_layout(
 
 st.plotly_chart(fig)
 
-#TODO: rewrite text, leave insights to plot
-#"most of the drones were registered"
 st.markdown(
-'''To further the understanding of drone usage, the `TYPE_OF_ACTIVITY` column was then evaluated. First, it was observed that the vast majority of drones registered are intended for recreational activities, with 'photography and film' and 'engineering' activities coming soon after.
-
-Additionally, these numbers were compared with the newly created `LEGAL_ENT` column, where it was found that individuals are the majority in almost all activities except engineering and security.'''
+'''To further the understanding of drone usage, the `TYPE_OF_ACTIVITY` column was then evaluated. The numbers were compared with the newly created `LEGAL_ENT` column.'''
 )
 
 st.code(
 '''#create the histogram plot
-fig = px.histogram(df, y='TYPE_OF_ACTIVITY', color='LEGAL_ENT',
-                   category_orders={'TYPE_OF_ACTIVITY': df['TYPE_OF_ACTIVITY'].value_counts().iloc[:10].index},
-                   height=500)
+fig = px.histogram(
+    df,
+    y='TYPE_OF_ACTIVITY',
+    color='LEGAL_ENT',
+    category_orders={'TYPE_OF_ACTIVITY': df['TYPE_OF_ACTIVITY'].value_counts().iloc[:10].index},
+    height=500
+    )
 
 #setting histogram plot attributes
 fig.update_layout(
-    title='Distribution of aircrafts by the type of activity',
-    title_font=dict(size=24, family='Open Sans'),
+    title=dict(
+        text='Recreational drones are in the majority,',
+        font=dict(
+            size=24,
+            family='Open Sans'
+            )
+        ),
+    legend=dict(
+        title=None,
+        xanchor='right',
+        yanchor='bottom', 
+        x=0.92,
+        y=0.05,
+        ),
     xaxis=dict(title=None),
     yaxis=dict(title=None)
+)
+
+fig.add_annotation(
+    xref='paper',
+    yref='paper',
+    x=-0.1,
+    y=1.08,
+    text="and this is the favorite activity of the individuals.",
+    showarrow=False,
+    font=dict(
+        color='white',
+        size=16,
+        family='Open Sans'
+    )
 )'''
 )
-#TODO: inserir subtitulo/anotacao sob o grafico
+
 #create the histogram plot
 fig = px.histogram(
     df,
@@ -827,7 +863,7 @@ fig.update_layout(
 fig.add_annotation(
     xref='paper',
     yref='paper',
-    x=0.01,
+    x=-0.1,
     y=1.08,
     text="and this is the favorite activity of the individuals.",
     showarrow=False,
@@ -842,7 +878,7 @@ fig.add_annotation(
 st.plotly_chart(fig)
 
 st.markdown(
-'''Finally, the questions regarding manufacturers and their aircraft models were analyzed. First a word cloud plot was used (which basically displays words according to their frequency (the higher the frequency, the bigger the word)) to visualize the distribution of manufacturers.'''
+'''Finally, the questions regarding manufacturers and their aircraft models were analyzed. We used a word cloud for that (which basically displays words according to their frequency - the higher the frequency, the bigger the word - to visualize the distribution of manufacturers.'''
 )
 
 st.code(
@@ -885,12 +921,12 @@ wordcloud = WordCloud(
 ax.axis("off")
 ax.imshow(wordcloud, interpolation='bilinear')
 
-st.pyplot(fig)
-
-#TODO: fix the percentages and spotlight the paragraph
 st.markdown(
-    f'The manufacturer that supplies most drones is {percentages.index[0].upper()}, as {percentages[0]}% of the drones were made by it. Its followed by {percentages.index[1].upper()} ({percentages[1]}%) and {percentages.index[2].upper()} ({percentages[2]}%). All the other manufacturers together represent {percentages[2:].astype(float).sum()}%.'
+    f"""<p style="text-align:center"><span style="font-family:Open Sans,sans-serif"><span style="color:#ffffff"><strong><span style="font-size:32px">{percentages.index[0].upper()} is the most common drone maker, with {percentages[0]}% of all the drones registered.</span></strong></span><br><span style="color:#dddddd"><span style="font-size:18px">Its followed by {percentages.index[1].upper()} ({percentages[1]}%) and {percentages.index[2].upper()} ({percentages[2]}%).</span></span><br><span style="color:#999999"><span style="font-size:16px">Each of the other manufacturers are represented by {percentages[3]}% or less of the registered aircrafts.</span></span></span></p>""",
+    unsafe_allow_html=True
 )
+
+st.pyplot(fig)
 
 st.markdown('It was then checked which are the main aircraft models provided by DJI in the system data. For this, the `MODEL` column was finally preprocessed.')
 
