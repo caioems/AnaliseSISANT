@@ -20,10 +20,10 @@ with open('style.css') as css:
 
 #setting up the sidebar
 st.sidebar.markdown("# Sections")
-st.sidebar.markdown("""<a href="#an-investigation-of-the-national-civil-aviation-agency-of-brazil-s-database-of-unmanned-aircrafts-uavs">Getting started</a>""", unsafe_allow_html=True)
-st.sidebar.markdown("""<a href="#dataframe-metadata">Dataframe metadata</a>""", unsafe_allow_html=True)
-st.sidebar.markdown("""<a href="#data-pre-processing">Data pre-processing</a>""", unsafe_allow_html=True)
-st.sidebar.markdown("""<a href="#explanatory-analysis">Explanatory analysis</a>""", unsafe_allow_html=True)
+st.sidebar.markdown('[Getting Started](#an-investigation-of-the-national-civil-aviation-agency-of-brazil-s-database-of-unmanned-aircrafts-uavs)')
+st.sidebar.markdown('[Dataframe metadata](#dataframe-metadata)')
+st.sidebar.markdown('[Data pre-processing](#data-pre-processing)')
+st.sidebar.markdown('[Explanatory analysis](#explanatory-analysis)')
 
 #creating the document
 st.header('''An investigation of the National Civil Aviation Agency of Brazil's database of unmanned aircrafts (UAVs)
