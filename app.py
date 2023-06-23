@@ -12,11 +12,11 @@ pd.options.mode.chained_assignment = None
 st.set_page_config(page_title="Aircrafts of SISANT (ANAC) - by Caio Souza")
 
 #loading CSS style
-with open('style.css') as css:
-    st.markdown(
-        f'<style>{css.read()}</style>',
-        unsafe_allow_html=True
-    )
+# with open('style.css') as css:
+#     st.markdown(
+#         f'<style>{css.read()}</style>',
+#         unsafe_allow_html=True
+#     )
 
 #setting up the sidebar
 st.sidebar.markdown("# Sections")
@@ -29,14 +29,16 @@ st.sidebar.markdown('[Explanatory analysis](#explanatory-analysis)')
 st.header('''An investigation of the National Civil Aviation Agency of Brazil's database of unmanned aircrafts (UAVs)
 _____''')
 
-st.markdown('''The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for the use of airspace, as well as methods for the registration and regulation of these aircraft, is still being built. SISANT (Unmanned Aircraft System) is a national system that collects information about the aircraft's owner (operator), as well as the activities for which it is employed. The aircraft owner is responsible for the data submitted, and he can only legally operate an UAV in Brazilian territory after registering in this system.'''
+st.markdown('''The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for airspace use, as well as systems for registering and regulating these aircraft, is still being developed. SISANT (Unmanned Aircraft System) is a national system that collects data about the owner (operator) of the aircraft as well as the activities for which it is used. The aircraft owner is accountable for the information provided, and he can legally operate a UAV in Brazilian territory only after registering in this system.'''
 )
 
 st.markdown(
-'''This project is using public data from SISANT, a system under the National Civil Aviation Agency of Brazil (ANAC) administration. The data is hosted at the [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados) portal and contains the unmanned aircraft registered in compliance with paragraph E94.301(b) of [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).'''
+'''This project uses weekly updated public data from SISANT, under the National Civil Aviation Agency of Brazil (ANAC) administration. The data is hosted at the [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados) portal and contains the unmanned aircraft registered in compliance with paragraph E94.301(b) of [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).'''
 ) 
 
-st.markdown('''The goal of this project is to apply data preprocessing methods and perform an explanatory analysis of the processed data. Python was selected for the task and all the data was handled through Pandas library. The plotting libraries selected were Matplotlib, Plotly and WordCloud.
+st.markdown('''This project's purpose is to use data preparation methods and then perform a quick explanatory analysis. Python was used for the work, and all data was handled using the Pandas module. Matplotlib, Plotly, and WordCloud were chosen as plotting libraries.
+            
+The sections of this project are presented in the left sidebar. Select the last section if you want to jump right to the graphics.
 _____'''
 )
 
@@ -389,8 +391,6 @@ fab_map = {
 fix_names('MANUFACTURER', fab_map)
 
 df['MANUFACTURER'] = df['MANUFACTURER'].astype('category')
-
-#TODO: max weight takeoff analysis
 
 st.write(
 '''Finally, the `TYPE_OF_ACTIVITY` feature was also validated and transformed. It categorizes the drones into 'Recreational', 'Experimental', and 'Other activities', the latter category being specified in text provided by the user.'''
@@ -1110,7 +1110,7 @@ fig.add_trace(
 
 #updating layout and axis labels
 fig.update_layout(
-    title='Distribution of aircraft manufacturers by legal nature',
+    title='Distribution of aircraft manufacturers...',
     title_font=dict(size=24),
     showlegend=False,
     yaxis=dict(title=None),
@@ -1177,8 +1177,9 @@ fig.add_trace(
 
 #updating layout and axis labels
 fig.update_layout(
-    title='Distribution of DJI models by legal nature',
+    title='...and the distribution of DJI models.',
     title_font=dict(size=24),
+    title_x=0.45,
     showlegend=False,
     yaxis=dict(title=None),
     yaxis2=dict(title=None)
