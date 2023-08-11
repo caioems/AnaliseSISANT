@@ -42,31 +42,32 @@ The sections of this project are presented in the left sidebar. Select the last 
 _____'''
 )
 
-st.code(
-'''#importing libs
-import pandas as pd
-import matplotlib.pyplot as plt
-import plotly.express as px
-import plotly.graph_objects as go
-import plotly.subplots as sp
-from re import match
-from wordcloud import WordCloud
+with st.expander("Check for code"):
+    st.code(
+    '''#importing libs
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import plotly.express as px
+    import plotly.graph_objects as go
+    import plotly.subplots as sp
+    from re import match
+    from wordcloud import WordCloud
 
-#loading data, dropping NAs and renaming features
-url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
+    #loading data, dropping NAs and renaming features
+    url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
 
-df = pd.read_csv(
-    url,
-    delimiter=';',
-    skiprows=1,
-    parse_dates=['DATA_VALIDADE'],
-    date_parser=lambda x: pd.to_datetime(x, format=r'%d/%m/%Y')
+    df = pd.read_csv(
+        url,
+        delimiter=';',
+        skiprows=1,
+        parse_dates=['DATA_VALIDADE'],
+        date_parser=lambda x: pd.to_datetime(x, format=r'%d/%m/%Y')
+        )
+
+    df.dropna(inplace=True)
+
+    df.columns = ['AIRCRAFT_ID', 'EXPIRATION_DATE', 'OPERATOR', 'CPF_CNPJ', 'TYPE_OF_USE', 'MANUFACTURER', 'MODEL', 'SERIAL_NUMBER', 'MAX_WEIGHT_TAKEOFF','TYPE_OF_ACTIVITY']'''
     )
-
-df.dropna(inplace=True)
-
-df.columns = ['AIRCRAFT_ID', 'EXPIRATION_DATE', 'OPERATOR', 'CPF_CNPJ', 'TYPE_OF_USE', 'MANUFACTURER', 'MODEL', 'SERIAL_NUMBER', 'MAX_WEIGHT_TAKEOFF','TYPE_OF_ACTIVITY']'''
-)
 
 #loading data, dropping NAs and renaming features
 url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
@@ -155,23 +156,24 @@ st.dataframe(
     height= 100
 )
 
-st.code(
-'''#removing whitespaces
-df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.replace(" ", "")
+with st.expander("Check for code"):
+    st.code(
+    '''#removing whitespaces
+    df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.replace(" ", "")
 
-#removing duplicates
-df = df.drop_duplicates(subset=['AIRCRAFT_ID'], keep='first')
+    #removing duplicates
+    df = df.drop_duplicates(subset=['AIRCRAFT_ID'], keep='first')
 
-#ensuring that each aircraft's ID codes comply to the patterns set 
-#in the metadata, and removing those that do not
-pattern = '^(PR|PP|PS)-\d{9}$'
-mask = [bool(match(pattern, code)) for code in df['AIRCRAFT_ID']]
-df = df[mask]
+    #ensuring that each aircraft's ID codes comply to the patterns set 
+    #in the metadata, and removing those that do not
+    pattern = '^(PR|PP|PS)-\d{9}$'
+    mask = [bool(match(pattern, code)) for code in df['AIRCRAFT_ID']]
+    df = df[mask]
 
-#setting index
-df = df.set_index(df['AIRCRAFT_ID'])
-df = df.drop(('AIRCRAFT_ID'), axis=1)'''
-)
+    #setting index
+    df = df.set_index(df['AIRCRAFT_ID'])
+    df = df.drop(('AIRCRAFT_ID'), axis=1)'''
+    )
 
 #removing whitespaces
 df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.replace(" ", "")
@@ -207,24 +209,25 @@ st.markdown(
 - `REG_DATE` - The date of the registration, calculated from `EXPIRATION_DATE` minus the standard validity period (two years).'''
 )
 
-st.code(
-'''#creating a function that sorts dates according to register status
-def reg_status(date):
-    today = pd.Timestamp.today()
-    if date < today:
-        return 'renew'
-    elif date < today - pd.DateOffset(months=6):
-        return 'inactive'
-    else:
-        return 'ok'
+with st.expander("Check for code"):
+    st.code(
+    '''#creating a function that sorts dates according to register status
+    def reg_status(date):
+        today = pd.Timestamp.today()
+        if date < today:
+            return 'renew'
+        elif date < today - pd.DateOffset(months=6):
+            return 'inactive'
+        else:
+            return 'ok'
 
-#creating a 'STATUS' feature, containing categorized data about each aircraft
-df['STATUS'] = df['EXPIRATION_DATE'].apply(reg_status)
-df['STATUS'] = df['STATUS'].astype('category')
+    #creating a 'STATUS' feature, containing categorized data about each aircraft
+    df['STATUS'] = df['EXPIRATION_DATE'].apply(reg_status)
+    df['STATUS'] = df['STATUS'].astype('category')
 
-#creating feature 'REG_DATE'
-df['REG_DATE'] = df['EXPIRATION_DATE'] - pd.DateOffset(years=2)'''
-)
+    #creating feature 'REG_DATE'
+    df['REG_DATE'] = df['EXPIRATION_DATE'] - pd.DateOffset(years=2)'''
+    )
 
 #creating a function that sorts dates according to register status (register ok, renew ou inactive)
 def reg_status(date):
@@ -249,10 +252,11 @@ st.markdown(
 '''Following, the `CPF_CNPJ` feature was worked on.'''
 )
 
-st.code(
-'''#removing whitespaces from the 'CPF_CNPJ'
-df['CPF_CNPJ'] = df['CPF_CNPJ'].str.replace(" ", "")'''
-)
+with st.expander("Check for code"):
+    st.code(
+    '''#removing whitespaces from the 'CPF_CNPJ'
+    df['CPF_CNPJ'] = df['CPF_CNPJ'].str.replace(" ", "")'''
+    )
 
 #removing whitespaces from the 'CPF_CNPJ'
 df['CPF_CNPJ'] = df['CPF_CNPJ'].str.replace(" ", "")
@@ -269,18 +273,19 @@ So we are going to split this feature into:
 - `ENT_NUM`, containing its number code.'''
 )
 
-st.code(
-'''df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
-    lambda x: 'individual' if x.startswith('CPF') else 'company'
-    ).astype('category')
+with st.expander("Check for code"):
+    st.code(
+    '''df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
+        lambda x: 'individual' if x.startswith('CPF') else 'company'
+        ).astype('category')
 
-df['ENT_NUM'] = df['CPF_CNPJ'].apply(
-    lambda x: ''.join(filter(str.isdigit, x.replace(':', '')))
-    ).astype('category')
+    df['ENT_NUM'] = df['CPF_CNPJ'].apply(
+        lambda x: ''.join(filter(str.isdigit, x.replace(':', '')))
+        ).astype('category')
 
-#dropping CPF_CNPJ 
-df = df.drop(('CPF_CNPJ'), axis=1)'''   
-)
+    #dropping CPF_CNPJ 
+    df = df.drop(('CPF_CNPJ'), axis=1)'''   
+    )
 
 # Splitting the 'CPF_CNPJ' feature into 'LEGAL_ENT' and 'ENT_NUM'
 df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
@@ -310,48 +315,49 @@ Example: `DJI`, `Dji` and `dji` represents same manufacturer.
 
 We started with `MANUFACTURER` (`MODEL` will be transformed in another moment because we will work only with the models provided by the most frequent drone manufacturer in the database).''')
 
-st.code(
-'''#creating function that, given a dataframe column and a map, the names 
-#are replaced by standardized names
-def fix_names(column, namemap, df=df):
-    for fixed_name, bad_names in namemap.items():
-        df.loc[df[column].str.contains(bad_names, regex=True), column] = fixed_name
+with st.expander("Check for code"):
+    st.code(
+    '''#creating function that, given a dataframe column and a map, the names 
+    #are replaced by standardized names
+    def fix_names(column, namemap, df=df):
+        for fixed_name, bad_names in namemap.items():
+            df.loc[df[column].str.contains(bad_names, regex=True), column] = fixed_name
 
-df['MANUFACTURER'] = df['MANUFACTURER'].str.lower().strip().replace(" ", "")
+    df['MANUFACTURER'] = df['MANUFACTURER'].str.lower().strip().replace(" ", "")
 
-#the dictionary was created based on the most common values, however,
-#given the high amount of unique values, lesser expressed and 
-#unknown manufacturers were grouped in the 'others' category       
-fab_map = {
-    'autelrobotics': 'autel',
-    'c-fly': 'cfly|c-fly',
-    'custom': 'fabrica|aeromodelo|propria|própria|proprio|próprio|caseiro|montado|artesanal|constru',
-    'dji': 'dji|mavic|phanton|phantom',
-    'flyingcircus': 'circus',
-    'geprc': 'gepr',
-    'highgreat': 'highgreat',
-    'horus': 'horus',
-    'hubsan': 'hubsan|hubsen',
-    'nuvemuav': 'nuvem',
-    'others': 'outro',
-    'parrot': 'parrot',
-    'phoenixmodel': 'phoenix',
-    'santiago&cintra': 'santiago|cintra',
-    'sensefly': 'sensefly',
-    'shantou': 'shantou',
-    'sjrc': 'sjrc|srjc',
-    'visuo': 'visuo',
-    'x-fly': 'xfly|x-fly',
-    'xiaomi': 'xiaomi|fimi|xiomi',
-    'xmobots': 'xmobots',
-    'zll': 'zll|sg906'
-    }
+    #the dictionary was created based on the most common values, however,
+    #given the high amount of unique values, lesser expressed and 
+    #unknown manufacturers were grouped in the 'others' category       
+    fab_map = {
+        'autelrobotics': 'autel',
+        'c-fly': 'cfly|c-fly',
+        'custom': 'fabrica|aeromodelo|propria|própria|proprio|próprio|caseiro|montado|artesanal|constru',
+        'dji': 'dji|mavic|phanton|phantom',
+        'flyingcircus': 'circus',
+        'geprc': 'gepr',
+        'highgreat': 'highgreat',
+        'horus': 'horus',
+        'hubsan': 'hubsan|hubsen',
+        'nuvemuav': 'nuvem',
+        'others': 'outro',
+        'parrot': 'parrot',
+        'phoenixmodel': 'phoenix',
+        'santiago&cintra': 'santiago|cintra',
+        'sensefly': 'sensefly',
+        'shantou': 'shantou',
+        'sjrc': 'sjrc|srjc',
+        'visuo': 'visuo',
+        'x-fly': 'xfly|x-fly',
+        'xiaomi': 'xiaomi|fimi|xiomi',
+        'xmobots': 'xmobots',
+        'zll': 'zll|sg906'
+        }
 
-#transforming the feature with the manufacturers names
-fix_names('MANUFACTURER', fab_map)
+    #transforming the feature with the manufacturers names
+    fix_names('MANUFACTURER', fab_map)
 
-df['MANUFACTURER'] = df['MANUFACTURER'].astype('category')'''
-)
+    df['MANUFACTURER'] = df['MANUFACTURER'].astype('category')'''
+    )
 
 #creating function so that, given a dataframe column and a map, the names are replaced by standardized names 
 def fix_names(column, namemap, df=df):
@@ -396,32 +402,33 @@ st.write(
 '''Finally, the `TYPE_OF_ACTIVITY` feature was also validated and transformed. It categorizes the drones into 'Recreational', 'Experimental', and 'Other activities', the latter category being specified in text provided by the user.'''
 )
 
-st.code(
-'''#cleaning feature
-df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.replace(" ", "")
-df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.lower()
+with st.expander("Check for code"):
+    st.code(
+    '''#cleaning feature
+    df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.replace(" ", "")
+    df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.lower()
 
-#again transforming the values of the feature
-act_map = {
-    'education': 'treinamento|educa|ensin|pesquis',
-    'engineering': 'pulveriz|aeroagr|agricultura|levantamento|fotograme|prospec|topografia|minera|capta|avalia|mapea|geoproc|engenharia|energia|solar|ambiental|constru|obras|industria|arquitetura|meioambiente',    
-    'photo&film': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
-    'logistics': 'transport|carga|delivery',
-    'publicity': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
-    'safety': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
-    }
+    #again transforming the values of the feature
+    act_map = {
+        'education': 'treinamento|educa|ensin|pesquis',
+        'engineering': 'pulveriz|aeroagr|agricultura|levantamento|fotograme|prospec|topografia|minera|capta|avalia|mapea|geoproc|engenharia|energia|solar|ambiental|constru|obras|industria|arquitetura|meioambiente',    
+        'photo&film': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
+        'logistics': 'transport|carga|delivery',
+        'publicity': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
+        'safety': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
+        }
 
-#reclassifying more specific activities into 'other' and converting the feature dtype
-fix_names('TYPE_OF_ACTIVITY', act_map, df)
+    #reclassifying more specific activities into 'other' and converting the feature dtype
+    fix_names('TYPE_OF_ACTIVITY', act_map, df)
 
-df.loc[
-    ~df['TYPE_OF_ACTIVITY'].isin(
-        df['TYPE_OF_ACTIVITY'].value_counts().head(8).index
-        ), 'TYPE_OF_ACTIVITY'
-    ] = 'others'
+    df.loc[
+        ~df['TYPE_OF_ACTIVITY'].isin(
+            df['TYPE_OF_ACTIVITY'].value_counts().head(8).index
+            ), 'TYPE_OF_ACTIVITY'
+        ] = 'others'
 
-df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].astype('category')'''
-)
+    df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].astype('category')'''
+    )
 
 #cleaning feature
 df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.replace(" ", "")
@@ -453,12 +460,13 @@ st.markdown(
 'Lastly, features that would not be used in the analysis were removed from the dataframe.'
 )
 
-st.code(
-'''#dropping features that won't be used
-df = df.drop(
-    [('SERIAL_NUMBER'), ('MAX_WEIGHT_TAKEOFF')],
-    axis=1
-    )''')
+with st.expander("Check for code"):
+    st.code(
+    '''#dropping features that won't be used
+    df = df.drop(
+        [('SERIAL_NUMBER'), ('MAX_WEIGHT_TAKEOFF')],
+        axis=1
+        )''')
 
 #dropping features that won't be used
 df = df.drop(
@@ -492,65 +500,66 @@ st.subheader('Explanatory analysis')
 st.markdown(
 '''Let's start by checking the dates related to each aircraft registration. By comparing data of `STATUS`, `REG_DATE` and `EXPIRATON_DATE` features we can better understand the rate of adherence to the system and also about the maintenance of these registers.''')
 
-st.code(
-'''#aggregating data by month
-agg_data = df.resample('M', on='REG_DATE').count()
-agg_data.reset_index(inplace=True)
+with st.expander("Check for code"):
+    st.code(
+    '''#aggregating data by month
+    agg_data = df.resample('M', on='REG_DATE').count()
+    agg_data.reset_index(inplace=True)
 
-#creating line plot
-fig = px.line(
-    agg_data, 
-    x='REG_DATE', 
-    y='OPERATOR', 
-    title='Monthly new registrations',
-    labels={'REG_DATE': '', 'OPERATOR': 'new registers'}
+    #creating line plot
+    fig = px.line(
+        agg_data, 
+        x='REG_DATE', 
+        y='OPERATOR', 
+        title='Monthly new registrations',
+        labels={'REG_DATE': '', 'OPERATOR': 'new registers'}
+        )
+
+    #creating histogram plot
+    fig = px.histogram(
+        df,
+        x='STATUS',
+        color='STATUS',
+        text_auto=True
     )
 
-#creating histogram plot
-fig = px.histogram(
-    df,
-    x='STATUS',
-    color='STATUS',
-    text_auto=True
-)
+    #removing legend
+    fig.update_layout(
+        showlegend=False,
+        xaxis=dict(title=f'There was {n_inact} inactive registers.'),
+        yaxis=dict(title=None)
+        )
 
-#removing legend
-fig.update_layout(
-    showlegend=False,
-    xaxis=dict(title=f'There was {n_inact} inactive registers.'),
-    yaxis=dict(title=None)
+    #adding an annotation
+    fig.add_annotation(
+        xref='paper',
+        yref='paper',
+        x=0.02,
+        y=1.1,
+        text=f'Most of the aircrafts ({round(n_ok / df.shape[0] * 100, ndigits=1)}%) are fine...',
+        showarrow=False,
+        font=dict(
+            color='white',
+            size=20,
+            family='Open Sans'
+        )
     )
 
-#adding an annotation
-fig.add_annotation(
-    xref='paper',
-    yref='paper',
-    x=0.02,
-    y=1.1,
-    text=f'Most of the aircrafts ({round(n_ok / df.shape[0] * 100, ndigits=1)}%) are fine...',
-    showarrow=False,
-    font=dict(
-        color='white',
-        size=20,
-        family='Open Sans'
+    #adding another annotation
+    fig.add_annotation(
+        xref='paper',
+        yref='paper',
+        x=0.95,
+        y=0.2,
+        text=f'...whilst {round(n_renew / df.shape[0] * 100, ndigits=1)}% needs renewal.',
+        showarrow=False,
+        font=dict(
+            color='white',
+            size=20,
+            family='Open Sans'
+        )
+    )'''
     )
-)
-
-#adding another annotation
-fig.add_annotation(
-    xref='paper',
-    yref='paper',
-    x=0.95,
-    y=0.2,
-    text=f'...whilst {round(n_renew / df.shape[0] * 100, ndigits=1)}% needs renewal.',
-    showarrow=False,
-    font=dict(
-        color='white',
-        size=20,
-        family='Open Sans'
-    )
-)'''
-)
 
 #aggregating data by month
 agg_data = df.resample('M', on='REG_DATE').count()
@@ -652,68 +661,69 @@ st.plotly_chart(fig)
 
 st.markdown("Now, through the `TYPE_OF_USE` feature, we will check how the drones perform their activities, in other words, how each drone is operated. The possible categories are 'basic' and 'advanced'. ")
 
-st.code(
-'''#calculate the value counts for each type of use
-value_counts = df['TYPE_OF_USE'].value_counts()
+with st.expander("Check for code"):
+    st.code(
+    '''#calculate the value counts for each type of use
+    value_counts = df['TYPE_OF_USE'].value_counts()
 
-#creating an indicator chart
-fig = go.Figure(go.Indicator(
-    mode="number",
-    title=dict(text='Currently,'),
-    value=value_counts.values[0] / value_counts.sum() * 100,
-    number=dict(
-        suffix='%', 
-        font=dict(
-            family='Open Sans', 
-            size=96
-            )
-        ),
-    domain=dict(x=[0,1], y=[0.6, 1])
-    )
-)
-
-#adding text to the chart
-fig.add_annotation(
-    xref='paper',
-    yref='paper',
-    xanchor='center',
-    yanchor='middle',
-    x=0.5,
-    y=0.5,
-    text="of the aircrafts are in basic operations<br><span style='color:gray'>(up to 25 kg, operated within line of sight and below 400 ft).</span>",
-    font=dict(
-        color='white',
-        size=20,
-        family='Open Sans'
-        ),
-    showarrow=False
-)
-
-#adding more text to the chart
-fig.add_annotation(
-    xref='paper',
-    yref='paper',
-    xanchor='center',
-    yanchor='middle',
-    x=0.5,
-    y=0.01,
-    text=f"<span style='color:gray'>There are only</span><br><br><span style='font-size:48px'>{value_counts.values[1]}</span><br>UAVs registered for advanced operations.",
-    font=dict(
-        color='white',
-        size=20,
-        family='Open Sans'
-        ),
-    showarrow=False
-)
-
-#setting the chart's background to transparent
-fig.update_layout(
-    dict(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)'
+    #creating an indicator chart
+    fig = go.Figure(go.Indicator(
+        mode="number",
+        title=dict(text='Currently,'),
+        value=value_counts.values[0] / value_counts.sum() * 100,
+        number=dict(
+            suffix='%', 
+            font=dict(
+                family='Open Sans', 
+                size=96
+                )
+            ),
+        domain=dict(x=[0,1], y=[0.6, 1])
         )
-)'''
-)
+    )
+
+    #adding text to the chart
+    fig.add_annotation(
+        xref='paper',
+        yref='paper',
+        xanchor='center',
+        yanchor='middle',
+        x=0.5,
+        y=0.5,
+        text="of the aircrafts are in basic operations<br><span style='color:gray'>(up to 25 kg, operated within line of sight and below 400 ft).</span>",
+        font=dict(
+            color='white',
+            size=20,
+            family='Open Sans'
+            ),
+        showarrow=False
+    )
+
+    #adding more text to the chart
+    fig.add_annotation(
+        xref='paper',
+        yref='paper',
+        xanchor='center',
+        yanchor='middle',
+        x=0.5,
+        y=0.01,
+        text=f"<span style='color:gray'>There are only</span><br><br><span style='font-size:48px'>{value_counts.values[1]}</span><br>UAVs registered for advanced operations.",
+        font=dict(
+            color='white',
+            size=20,
+            family='Open Sans'
+            ),
+        showarrow=False
+    )
+
+    #setting the chart's background to transparent
+    fig.update_layout(
+        dict(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+            )
+    )'''
+    )
 
 #calculate the value counts for each type of use
 value_counts = df['TYPE_OF_USE'].value_counts()
@@ -782,50 +792,51 @@ st.markdown(
 '''To further the understanding of drone usage, the `TYPE_OF_ACTIVITY` feature was then evaluated. The numbers were compared with the newly created `LEGAL_ENT` feature.'''
 )
 
-st.code(
-'''#create the histogram plot
-fig = px.histogram(
-    df,
-    y='TYPE_OF_ACTIVITY',
-    color='LEGAL_ENT',
-    category_orders={'TYPE_OF_ACTIVITY': df['TYPE_OF_ACTIVITY'].value_counts().iloc[:10].index},
-    height=500
+with st.expander("Check for code"):
+    st.code(
+    '''#create the histogram plot
+    fig = px.histogram(
+        df,
+        y='TYPE_OF_ACTIVITY',
+        color='LEGAL_ENT',
+        category_orders={'TYPE_OF_ACTIVITY': df['TYPE_OF_ACTIVITY'].value_counts().iloc[:10].index},
+        height=500
+        )
+
+    #setting histogram plot attributes
+    fig.update_layout(
+        title=dict(
+            text='Recreational drones are in the majority,',
+            font=dict(
+                size=24,
+                family='Open Sans'
+                )
+            ),
+        legend=dict(
+            title=None,
+            xanchor='right',
+            yanchor='bottom', 
+            x=0.92,
+            y=0.05,
+            ),
+        xaxis=dict(title=None),
+        yaxis=dict(title=None)
     )
 
-#setting histogram plot attributes
-fig.update_layout(
-    title=dict(
-        text='Recreational drones are in the majority,',
+    fig.add_annotation(
+        xref='paper',
+        yref='paper',
+        x=-0.1,
+        y=1.08,
+        text="and this is the favorite activity of the individuals.",
+        showarrow=False,
         font=dict(
-            size=24,
+            color='white',
+            size=16,
             family='Open Sans'
-            )
-        ),
-    legend=dict(
-        title=None,
-        xanchor='right',
-        yanchor='bottom', 
-        x=0.92,
-        y=0.05,
-        ),
-    xaxis=dict(title=None),
-    yaxis=dict(title=None)
-)
-
-fig.add_annotation(
-    xref='paper',
-    yref='paper',
-    x=-0.1,
-    y=1.08,
-    text="and this is the favorite activity of the individuals.",
-    showarrow=False,
-    font=dict(
-        color='white',
-        size=16,
-        family='Open Sans'
+        )
+    )'''
     )
-)'''
-)
 
 #create the histogram plot
 fig = px.histogram(
@@ -877,23 +888,24 @@ st.markdown(
 '''Finally, the questions regarding manufacturers and their aircraft models were analyzed. We used a word cloud for that (which basically displays words according to their frequency - the higher the frequency, the bigger the word - to visualize the distribution of manufacturers.'''
 )
 
-st.code(
-'''#creating figure and axis
-fig, ax = plt.subplots(figsize=(12,6))
-fig.patch.set_alpha(0.0)
+with st.expander("Check for code"):
+    st.code(
+    '''#creating figure and axis
+    fig, ax = plt.subplots(figsize=(12,6))
+    fig.patch.set_alpha(0.0)
 
-#creating word cloud
-wordcloud = WordCloud(
-    width=1200, height=600, 
-    colormap='tab10'
-    ).generate_from_frequencies(
-        df['MANUFACTURER'].value_counts()
-        )
+    #creating word cloud
+    wordcloud = WordCloud(
+        width=1200, height=600, 
+        colormap='tab10'
+        ).generate_from_frequencies(
+            df['MANUFACTURER'].value_counts()
+            )
 
-#setting axis attributes
-ax.axis("off")
-ax.imshow(wordcloud, interpolation='bilinear')'''
-)
+    #setting axis attributes
+    ax.axis("off")
+    ax.imshow(wordcloud, interpolation='bilinear')'''
+    )
 
 counts = df['MANUFACTURER'].value_counts()
 percentages = counts / counts.sum()
@@ -926,52 +938,53 @@ st.pyplot(fig)
 
 st.markdown('It was then checked which are the main aircraft models provided by DJI in the system data. For this, the `MODEL` feature was finally preprocessed.')
 
-st.code(
-'''#creating subset containing dji aircrafts
-dji_df = df.loc[df['MANUFACTURER']=='dji']
+with st.expander("Check for code"):
+    st.code(
+    '''#creating subset containing dji aircrafts
+    dji_df = df.loc[df['MANUFACTURER']=='dji']
 
-#cleaning whitespaces
-dji_df['MODEL'] = dji_df['MODEL'].str.lower()
-dji_df['MODEL'] = dji_df['MODEL'].str.replace(" ", "")
+    #cleaning whitespaces
+    dji_df['MODEL'] = dji_df['MODEL'].str.lower()
+    dji_df['MODEL'] = dji_df['MODEL'].str.replace(" ", "")
 
-#creating a model dictionary
-dji_model_map = {
-    'mavic': 'mav|air|ma2ue3w|m1p|da2sue1|1ss5|u11x|rc231|m2e|l1p|enterprisedual',
-    'phantom': 'phan|wm331a|p4p|w322b|p4mult|w323|wm332a|hanto',
-    'mini': 'min|mt2pd|mt2ss5|djimi|mt3m3vd',
-    'spark': 'spa|mm1a',
-    'matrice': 'matrice|m300',
-    'avata': 'avata|qf2w4k',
-    'inspire': 'inspire',
-    'tello': 'tello|tlw004',
-    'agras': 'agras|mg-1p|mg1p|t16|t10|t40|3wwdz',
-    'fpv': 'fpv',
-    'others': 'dji'
-    }
+    #creating a model dictionary
+    dji_model_map = {
+        'mavic': 'mav|air|ma2ue3w|m1p|da2sue1|1ss5|u11x|rc231|m2e|l1p|enterprisedual',
+        'phantom': 'phan|wm331a|p4p|w322b|p4mult|w323|wm332a|hanto',
+        'mini': 'min|mt2pd|mt2ss5|djimi|mt3m3vd',
+        'spark': 'spa|mm1a',
+        'matrice': 'matrice|m300',
+        'avata': 'avata|qf2w4k',
+        'inspire': 'inspire',
+        'tello': 'tello|tlw004',
+        'agras': 'agras|mg-1p|mg1p|t16|t10|t40|3wwdz',
+        'fpv': 'fpv',
+        'others': 'dji'
+        }
 
-applying the fix_names function to the MODEL feature
-fix_names('MODEL', dji_model_map, dji_df)
+    applying the fix_names function to the MODEL feature
+    fix_names('MODEL', dji_model_map, dji_df)
 
-#renaming unknown models as "others"
-dji_df.loc[~dji_df['MODEL'].isin(dji_df['MODEL'].value_counts().head(14).index), 'MODEL'] = 'others'
+    #renaming unknown models as "others"
+    dji_df.loc[~dji_df['MODEL'].isin(dji_df['MODEL'].value_counts().head(14).index), 'MODEL'] = 'others'
 
-dji_df['MODEL'] = dji_df['MODEL'].astype('category')
+    dji_df['MODEL'] = dji_df['MODEL'].astype('category')
 
-#creating the histogram plot
-fig = px.histogram(
-    dji_df, 
-    y='MODEL',
-    category_orders={'MODEL': dji_df['MODEL'].value_counts().iloc[:14].index}
+    #creating the histogram plot
+    fig = px.histogram(
+        dji_df, 
+        y='MODEL',
+        category_orders={'MODEL': dji_df['MODEL'].value_counts().iloc[:14].index}
+        )
+
+    #set histogram plot attributes
+    fig.update_layout(
+        title='Distribution of aircraft models manufactured by DJI in SISANT',
+        title_font=dict(size=24),
+        xaxis=dict(title=None),
+        yaxis=dict(title=None),
+    )'''
     )
-
-#set histogram plot attributes
-fig.update_layout(
-    title='Distribution of aircraft models manufactured by DJI in SISANT',
-    title_font=dict(size=24),
-    xaxis=dict(title=None),
-    yaxis=dict(title=None),
-)'''
-)
 
 #criando subset contendo os drones fabricados pela dji
 dji_df = df.loc[df['MANUFACTURER']=='dji']
@@ -1025,52 +1038,53 @@ st.plotly_chart(fig)
 
 st.markdown('Which brands do individuals and companies prefer?')
 
-st.code(
-'''#creating subsets based on LEGAL_ENT
-ind_df = df.loc[df['LEGAL_ENT'] == 'individual', 'MANUFACTURER']
-co_df = df.loc[df['LEGAL_ENT'] == 'company', 'MANUFACTURER']
+with st.expander("Check for code"):
+    st.code(
+    '''#creating subsets based on LEGAL_ENT
+    ind_df = df.loc[df['LEGAL_ENT'] == 'individual', 'MANUFACTURER']
+    co_df = df.loc[df['LEGAL_ENT'] == 'company', 'MANUFACTURER']
 
-#creating figure and subplots
-fig = sp.make_subplots(
-    rows=1, 
-    cols=2, 
-    subplot_titles=('individuals', 'companies'), 
-    shared_yaxes=True
+    #creating figure and subplots
+    fig = sp.make_subplots(
+        rows=1, 
+        cols=2, 
+        subplot_titles=('individuals', 'companies'), 
+        shared_yaxes=True
+        )
+
+    #creating the first histogram plot (individuals)
+    fig.add_trace(
+        go.Bar(
+            x=ind_df.value_counts().iloc[:7].index,
+            y=ind_df.value_counts().iloc[:7],
+            marker_color='lightskyblue',
+            text=ind_df.value_counts().iloc[:7],
+            ),
+        row=1,
+        col=1
+        )
+
+    #creating the second histogram plot (companies)
+    fig.add_trace(
+        go.Bar(
+            x=co_df.value_counts().iloc[:7].index,
+            y=co_df.value_counts().iloc[:7],
+            marker_color='lightgreen',
+            text=co_df.value_counts().iloc[:7],
+            ),
+        row=1, 
+        col=2
+        )
+
+    #updating layout and axis labels
+    fig.update_layout(
+        title='Distribution of aircraft manufacturers by legal nature',
+        title_font=dict(size=24),
+        showlegend=False,
+        yaxis=dict(title=None),
+        yaxis2=dict(title=None)
+        )'''
     )
-
-#creating the first histogram plot (individuals)
-fig.add_trace(
-    go.Bar(
-        x=ind_df.value_counts().iloc[:7].index,
-        y=ind_df.value_counts().iloc[:7],
-        marker_color='lightskyblue',
-        text=ind_df.value_counts().iloc[:7],
-        ),
-    row=1,
-    col=1
-    )
-
-#creating the second histogram plot (companies)
-fig.add_trace(
-    go.Bar(
-        x=co_df.value_counts().iloc[:7].index,
-        y=co_df.value_counts().iloc[:7],
-        marker_color='lightgreen',
-        text=co_df.value_counts().iloc[:7],
-        ),
-    row=1, 
-    col=2
-    )
-
-#updating layout and axis labels
-fig.update_layout(
-    title='Distribution of aircraft manufacturers by legal nature',
-    title_font=dict(size=24),
-    showlegend=False,
-    yaxis=dict(title=None),
-    yaxis2=dict(title=None)
-    )'''
-)
 
 #creating subsets based on LEGAL_ENT
 ind_df = df.loc[df['LEGAL_ENT'] == 'individual', 'MANUFACTURER']
@@ -1156,7 +1170,7 @@ fig.add_trace(
     go.Bar(
         x=ind_models.value_counts().iloc[:7].index,
         y=ind_models.value_counts().iloc[:7],
-        marker_color='lightskyblue',
+        #marker_color='lightskyblue',
         text=ind_models.value_counts().iloc[:7],
         ),
     row=1,
@@ -1168,7 +1182,7 @@ fig.add_trace(
     go.Bar(
         x=co_models.value_counts().iloc[:7].index,
         y=co_models.value_counts().iloc[:7],
-        marker_color='lightgreen',
+        #marker_color='lightgreen',
         text=co_models.value_counts().iloc[:7],
         ),
     row=1, 

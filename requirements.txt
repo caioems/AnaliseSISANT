@@ -1,5 +1,5 @@
 matplotlib
 pandas
 plotly
-streamlit==1.20
+streamlit
 wordcloud
