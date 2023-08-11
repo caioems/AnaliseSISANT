@@ -29,6 +29,8 @@ st.sidebar.markdown('[Explanatory analysis](#explanatory-analysis)')
 st.header('''An investigation of the National Civil Aviation Agency of Brazil's database of unmanned aircrafts (UAVs)
 _____''')
 
+st.image("https://i.ibb.co/16LTfqj/drone.jpg", width=400)
+
 st.markdown('''The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for airspace use is still being built, as well as systems for registering and regulating these aircraft. SISANT (Unmanned Aircraft System) is a national system that collects data about the owner (operator) of the aircraft as well as the activities for which it is used. The aircraft owner is accountable for the information provided, and he can only legally operate a UAV in Brazilian territory after registering in this system.'''
 )
 
