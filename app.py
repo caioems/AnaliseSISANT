@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.subplots as sp
+from PIL import Image
 from re import match
 from wordcloud import WordCloud
 
@@ -29,7 +30,16 @@ st.sidebar.markdown('[Explanatory analysis](#explanatory-analysis)')
 st.header('''An investigation of the National Civil Aviation Agency of Brazil's database of unmanned aircrafts (UAVs)
 _____''')
 
-st.image("https://i.ibb.co/16LTfqj/drone.jpg", width=400)
+left_co, cent_co, right_co = st.columns([0.2, 0.6, 0.2])
+with cent_co:
+    img = Image.open("img/drone.jpg")
+    new_img = img.resize(
+        (
+            int(img.width * 0.05),
+            int(img.height * 0.05)
+            )
+        )
+    st.image(new_img)
 
 st.markdown('''The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for airspace use is still being built, as well as systems for registering and regulating these aircraft. SISANT (Unmanned Aircraft System) is a national system that collects data about the owner (operator) of the aircraft as well as the activities for which it is used. The aircraft owner is accountable for the information provided, and he can only legally operate a UAV in Brazilian territory after registering in this system.'''
 )
@@ -41,10 +51,12 @@ st.markdown(
 st.markdown('''This project's purpose is to use data preparation methods and then perform a quick explanatory analysis. Python was used for the work, and all data was handled using the Pandas module. Matplotlib, Plotly, and WordCloud were chosen as plotting libraries.
             
 The sections of this project are presented in the left sidebar. Select the last section if you want to jump right to the graphics.
-_____'''
+_____
+
+**It started by downloading the updated data and loading it into a Pandas dataframe.** Then we dropped the NAs and renamed the features. You can check the code and the results below.'''
 )
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#importing libs
     import pandas as pd
@@ -146,7 +158,7 @@ _____
 
 st.subheader('Data pre-processing')
 st.markdown(
-'''The `AIRCRAFT_ID` feature would be used to index the dataframe at first. However, duplicate values were found and removed. The feature was then tested for values that did not match the digit patterns shown in the dataset information. Finally, `AIRCRAFT_ID` was assigned as the dataframe index.'''
+'''The `AIRCRAFT_ID` feature would be used to index the dataframe at first. However, duplicated values were found and removed. The feature was then tested for values that did not match the digit patterns shown in the metadata. Finally, `AIRCRAFT_ID` was assigned as the dataframe index.'''
 )
 
 #checking the duplicates
@@ -158,7 +170,7 @@ st.dataframe(
     height= 100
 )
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#removing whitespaces
     df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.replace(" ", "")
@@ -211,7 +223,7 @@ st.markdown(
 - `REG_DATE` - The date of the registration, calculated from `EXPIRATION_DATE` minus the standard validity period (two years).'''
 )
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#creating a function that sorts dates according to register status
     def reg_status(date):
@@ -254,7 +266,7 @@ st.markdown(
 '''Following, the `CPF_CNPJ` feature was worked on.'''
 )
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#removing whitespaces from the 'CPF_CNPJ'
     df['CPF_CNPJ'] = df['CPF_CNPJ'].str.replace(" ", "")'''
@@ -275,7 +287,7 @@ So we are going to split this feature into:
 - `ENT_NUM`, containing its number code.'''
 )
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
         lambda x: 'individual' if x.startswith('CPF') else 'company'
@@ -317,7 +329,7 @@ Example: `DJI`, `Dji` and `dji` represents same manufacturer.
 
 We started with `MANUFACTURER` (`MODEL` will be transformed in another moment because we will work only with the models provided by the most frequent drone manufacturer in the database).''')
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#creating function that, given a dataframe column and a map, the names 
     #are replaced by standardized names
@@ -404,7 +416,7 @@ st.write(
 '''Finally, the `TYPE_OF_ACTIVITY` feature was also validated and transformed. It categorizes the drones into 'Recreational', 'Experimental', and 'Other activities', the latter category being specified in text provided by the user.'''
 )
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#cleaning feature
     df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.replace(" ", "")
@@ -462,7 +474,7 @@ st.markdown(
 'Lastly, features that would not be used in the analysis were removed from the dataframe.'
 )
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#dropping features that won't be used
     df = df.drop(
@@ -502,7 +514,7 @@ st.subheader('Explanatory analysis')
 st.markdown(
 '''Let's start by checking the dates related to each aircraft registration. By comparing data of `STATUS`, `REG_DATE` and `EXPIRATON_DATE` features we can better understand the rate of adherence to the system and also about the maintenance of these registers.''')
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#aggregating data by month
     agg_data = df.resample('M', on='REG_DATE').count()
@@ -663,7 +675,7 @@ st.plotly_chart(fig)
 
 st.markdown("Now, through the `TYPE_OF_USE` feature, we will check how the drones perform their activities, in other words, how each drone is operated. The possible categories are 'basic' and 'advanced'. ")
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#calculate the value counts for each type of use
     value_counts = df['TYPE_OF_USE'].value_counts()
@@ -794,7 +806,7 @@ st.markdown(
 '''To further the understanding of drone usage, the `TYPE_OF_ACTIVITY` feature was then evaluated. The numbers were compared with the newly created `LEGAL_ENT` feature.'''
 )
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#create the histogram plot
     fig = px.histogram(
@@ -890,7 +902,7 @@ st.markdown(
 '''Finally, the questions regarding manufacturers and their aircraft models were analyzed. We used a word cloud for that (which basically displays words according to their frequency - the higher the frequency, the bigger the word - to visualize the distribution of manufacturers.'''
 )
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#creating figure and axis
     fig, ax = plt.subplots(figsize=(12,6))
@@ -940,7 +952,7 @@ st.pyplot(fig)
 
 st.markdown('It was then checked which are the main aircraft models provided by DJI in the system data. For this, the `MODEL` feature was finally preprocessed.')
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#creating subset containing dji aircrafts
     dji_df = df.loc[df['MANUFACTURER']=='dji']
@@ -1040,7 +1052,7 @@ st.plotly_chart(fig)
 
 st.markdown('Which brands do individuals and companies prefer?')
 
-with st.expander("Check for code"):
+with st.expander("Check the code"):
     st.code(
     '''#creating subsets based on LEGAL_ENT
     ind_df = df.loc[df['LEGAL_ENT'] == 'individual', 'MANUFACTURER']
