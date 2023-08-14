@@ -1216,11 +1216,37 @@ fig.update_layout(
 #displaying
 st.plotly_chart(fig)
 
-# fig = px.bar(
-#     dji_df,
-#     x=dji_df['MODEL'],
-#     y=counts,
-#     color=dji_df['LEGAL_ENT']
-# )
+co_ids = df.loc[
+    df['LEGAL_ENT'] == 'company', 
+    'ENT_NUM'
+    ]
 
-# st.plotly_chart(fig)
+import requests
+def get_cnpj_data(cnpj):
+    # Dado um CNPJ, faz uma requisição para a API Minha Receita. Caso a requisição seja bem sucedida, retorna o conteúdo da requisição em formato json
+    api_url = 'https://minhareceita.org/'
+    r = requests.post(
+        api_url, 
+        data=cnpj, 
+        timeout=None)
+    if r.status_code == 200:
+        return json.loads(r.content)
+    else:
+        raise Exception(f'Erro na API: {r.status_code}')
+
+
+import json
+def jprint(obj):
+    # Cria visualização amigável de um objeto json
+    text = json.dumps(
+        obj, 
+        sort_keys=True, 
+        indent=4, 
+        ensure_ascii=False)
+    print(text)
+
+
+cnpj_example = {'cnpj': 19131243000197}
+response_example = get_cnpj_data(cnpj_example)
+print(response_example.text)
+
