@@ -1232,7 +1232,7 @@ def get_cnpj_data(cnpj):
     if r.status_code == 200:
         return json.loads(r.content)
     else:
-        raise Exception(f'Erro na API: {r.status_code}')
+        raise Exception(f'Erro na API: {r.status_code}, {r.messa}')
 
 
 import json
