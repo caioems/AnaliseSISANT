@@ -1,4 +1,6 @@
 ### Importando módulos:
+import json
+import requests
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -1216,37 +1218,20 @@ fig.update_layout(
 #displaying
 st.plotly_chart(fig)
 
-co_ids = df.loc[
-    df['LEGAL_ENT'] == 'company', 
-    'ENT_NUM'
-    ]
 
-import requests
-def get_cnpj_data(cnpj):
-    # Dado um CNPJ, faz uma requisição para a API Minha Receita. Caso a requisição seja bem sucedida, retorna o conteúdo da requisição em formato json
-    api_url = 'https://minhareceita.org/'
-    r = requests.post(
-        api_url, 
-        data=cnpj, 
-        timeout=None)
-    if r.status_code == 200:
-        return json.loads(r.content)
-    else:
-        raise Exception(f'Erro na API: {r.status_code}, {r.messa}')
+#//CONSULT CNPJS TO CHECK WHICH BRAZILIAN STATE THE DRONE WAS REGISTERED IN
+co_ids = df.loc[df['LEGAL_ENT'] == 'company']
 
-
-import json
-def jprint(obj):
-    # Cria visualização amigável de um objeto json
-    text = json.dumps(
-        obj, 
-        sort_keys=True, 
-        indent=4, 
-        ensure_ascii=False)
-    print(text)
-
-
-cnpj_example = {'cnpj': 19131243000197}
-response_example = get_cnpj_data(cnpj_example)
-print(response_example.text)
+def get_cnpj_data(cnpj):  # sourcery skip: raise-specific-error
+    api_url = 'https://minhareceita.org'
+    r = requests.get(
+        f"{api_url}/{cnpj}"
+    )         
+    if r.status_code != 200:
+        raise Exception(f'Erro na API: {r.status_code}')
+    try:
+        r_dict = json.loads(r.content)
+        return r_dict.get('uf')
+    except:
+        return 0
 
