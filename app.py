@@ -1,6 +1,4 @@
 ### Importando módulos:
-import json
-import requests
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -29,7 +27,7 @@ st.sidebar.markdown('[Data pre-processing](#data-pre-processing)')
 st.sidebar.markdown('[Explanatory analysis](#explanatory-analysis)')
 
 #creating the document
-st.header('''An investigation of the National Civil Aviation Agency of Brazil's database of unmanned aircrafts (UAVs)
+st.header('''ANAC's UAV Database: Charting trends in Brazilian unmanned aviation
 _____''')
 
 left_co, cent_co, right_co = st.columns([0.2, 0.6, 0.2])
@@ -43,19 +41,19 @@ with cent_co:
         )
     st.image(new_img)
 
-st.markdown('''The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for airspace use is still being built, as well as systems for registering and regulating these aircraft. SISANT (Unmanned Aircraft System) is a national system that collects data about the owner (operator) of the aircraft as well as the activities for which it is used. The aircraft owner is accountable for the information provided, and he can only legally operate a UAV in Brazilian territory after registering in this system.'''
+st.markdown('''The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for airspace use is still being built, as well as systems for registering and regulating these aircraft. SISANT (Unmanned Aircraft System) is a national system that collects data about the aircraft owner (also called operator) as well as the activities for which it is used. The operator is accountable for the information provided, and it can only legally operate a UAV in Brazilian territory after properly registering in this system.'''
 )
 
 st.markdown(
-'''This project uses weekly updated public data from SISANT, under the National Civil Aviation Agency of Brazil (ANAC) administration. The data is hosted at the [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados) portal and contains the unmanned aircraft registered in compliance with paragraph E94.301(b) of [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).'''
+'''This application uses weekly updated public data from SISANT, under the National Civil Aviation Agency of Brazil (ANAC) administration. The data is hosted at the [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados) portal and contains the unmanned aircraft registered in compliance with [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).'''
 ) 
 
-st.markdown('''This project's purpose is to use data preparation methods and then perform a quick explanatory analysis. Python was used for the work, and all data was handled using the Pandas module. Matplotlib, Plotly, and WordCloud were chosen as plotting libraries.
+st.markdown('''The goal of this project was to study and apply data analysis practices, mainly pre-processing and a bit of explanatory analysis. The cool thing about this application is that the source data is frequently updated, triggering automatic updates to all the graphs and charts.
             
-The sections of this project are presented in the left sidebar. Select the last section if you want to jump right to the graphics.
+The sections of this project are presented in the left sidebar. Select the last section if you want to jump right to the data visualization.
 _____
 
-**It started by downloading the updated data and loading it into a Pandas dataframe.** Then we dropped the NAs and renamed the features. You can check the code and the results below.'''
+**Let's start** by fetching the latest data and transforming it into a raw pandas dataframe. After cleaning out any missing values and giving our features new names, check the code and the results below.'''
 )
 
 with st.expander("Check the code"):
@@ -1219,19 +1217,19 @@ fig.update_layout(
 st.plotly_chart(fig)
 
 
-#//CONSULT CNPJS TO CHECK WHICH BRAZILIAN STATE THE DRONE WAS REGISTERED IN
-co_ids = df.loc[df['LEGAL_ENT'] == 'company']
+# #//CONSULT CNPJS TO CHECK WHICH BRAZILIAN STATE THE DRONE WAS REGISTERED IN
+# co_ids = df.loc[df['LEGAL_ENT'] == 'company']
 
-def get_cnpj_data(cnpj):  # sourcery skip: raise-specific-error
-    api_url = 'https://minhareceita.org'
-    r = requests.get(
-        f"{api_url}/{cnpj}"
-    )         
-    if r.status_code != 200:
-        raise Exception(f'Erro na API: {r.status_code}')
-    try:
-        r_dict = json.loads(r.content)
-        return r_dict.get('uf')
-    except:
-        return 0
+# def get_cnpj_data(cnpj):  # sourcery skip: raise-specific-error
+#     api_url = 'https://minhareceita.org'
+#     r = requests.get(
+#         f"{api_url}/{cnpj}"
+#     )         
+#     if r.status_code != 200:
+#         raise Exception(f'Erro na API: {r.status_code}')
+#     try:
+#         r_dict = json.loads(r.content)
+#         return r_dict.get('uf')
+#     except:
+#         return 0
 
