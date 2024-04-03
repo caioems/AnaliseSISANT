@@ -51,19 +51,19 @@ st.markdown(
 st.markdown('''The goal of this project was to study and apply data analysis practices, mainly pre-processing and a bit of explanatory analysis. The cool thing about this application is that the source data is frequently updated, triggering automatic updates to all the graphs and charts.
             
 The sections of this project are presented in the left sidebar. Select the last section if you want to jump right to the data visualization.
-_____
-
-**Let's start** by fetching the latest data and transforming it into a raw pandas dataframe. After cleaning out any missing values and giving our features new names, check the code and the results below.'''
+_____'''
 )
 
 with st.expander("Check the code"):
     st.code(
     '''#importing libs
     import pandas as pd
+    import streamlit as st
     import matplotlib.pyplot as plt
     import plotly.express as px
     import plotly.graph_objects as go
     import plotly.subplots as sp
+    from PIL import Image
     from re import match
     from wordcloud import WordCloud
 
@@ -98,12 +98,7 @@ df.dropna(inplace=True)
 
 df.columns = ['AIRCRAFT_ID', 'EXPIRATION_DATE', 'OPERATOR', 'CPF_CNPJ', 'TYPE_OF_USE', 'MANUFACTURER', 'MODEL', 'SERIAL_NUMBER', 'MAX_WEIGHT_TAKEOFF','TYPE_OF_ACTIVITY']
 
-st.write(':arrow_right: Raw dataframe and features description:')
-st.dataframe(
-    df,
-    height=250,
-    use_container_width=True
-    )
+st.write(':arrow_right: Features and dataframe information:')
 
 with st.container():
     import io
@@ -112,17 +107,27 @@ with st.container():
     df.info(buf=buffer)
     info_string = buffer.getvalue()
     st.code(info_string)
+    
+st.dataframe(
+    df,
+    height=250,
+    use_container_width=True
+    )
 
-    st.dataframe(
-        df.describe(
-            include='all',  
-            #datetime_is_numeric=True
-            ),
-        height=150
-        )
-
-
+st.write('___')
 st.subheader('Dataframe metadata:')
+
+left_co, cent_co, right_co = st.columns([0.1, 0.8, 0.1])
+with cent_co:
+    img = Image.open("img/features.jpg")
+    # new_img = img.resize(
+    #     (
+    #         int(img.width * 0.05),
+    #         int(img.height * 0.05)
+    #         )
+    #     )
+    st.image(img)
+
 st.markdown(
     '''- `AIRCRAFT_ID`: Aircraft ID code. Follows rules:
     - Recreational use (aircraft models): PR-XXXXXXXXX; 
@@ -155,8 +160,13 @@ st.markdown(
     
 _____
 ''')
-
 st.subheader('Data pre-processing')
+
+left_co, cent_co, right_co = st.columns([0.1, 0.8, 0.1])
+with cent_co:
+    img = Image.open("img/aerial_farm.jpg")
+    st.image(img)
+
 st.markdown(
 '''The `AIRCRAFT_ID` feature would be used to index the dataframe at first. However, duplicated values were found and removed. The feature was then tested for values that did not match the digit patterns shown in the metadata. Finally, `AIRCRAFT_ID` was assigned as the dataframe index.'''
 )
@@ -164,38 +174,13 @@ st.markdown(
 #checking the duplicates
 dupl = df[df.duplicated(subset=['AIRCRAFT_ID'], keep=False)]
 
-st.markdown(':arrow_right: Duplicated entries:')
-st.dataframe(
-    dupl.sort_values(by=['AIRCRAFT_ID']),
-    height= 100
-)
-
-with st.expander("Check the code"):
-    st.code(
-    '''#removing whitespaces
-    df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.replace(" ", "")
-
-    #removing duplicates
-    df = df.drop_duplicates(subset=['AIRCRAFT_ID'], keep='first')
-
-    #ensuring that each aircraft's ID codes comply to the patterns set 
-    #in the metadata, and removing those that do not
-    pattern = '^(PR|PP|PS)-\d{9}$'
-    mask = [bool(match(pattern, code)) for code in df['AIRCRAFT_ID']]
-    df = df[mask]
-
-    #setting index
-    df = df.set_index(df['AIRCRAFT_ID'])
-    df = df.drop(('AIRCRAFT_ID'), axis=1)'''
-    )
-
 #removing whitespaces
 df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.replace(" ", "")
 
 #removing duplicates
-df = df.drop_duplicates(subset=['AIRCRAFT_ID'], keep='first')
+df = df.drop_duplicates(subset=['AIRCRAFT_ID'], keep='last')
 
-#checking that the codes for each aircraft conform to the patterns established in the metadata, and removing those that do not
+#check if the ID codes for each aircraft comply to the patterns set in the metadata, and removing those that do not.
 nrows_before = df.shape[0]
 
 pattern = '^(PR|PP|PS)-\d{9}$'
@@ -205,8 +190,9 @@ df = df[mask]
 nrows_after = df.shape[0]
 
 st.markdown(
-f''':arrow_right: Entries removed by invalid ID code patterns: **{nrows_before - nrows_after}**  
-:arrow_right: Valid entries in the dataframe: **{nrows_after}**''')
+f""":x: Duplicated entries: {dupl.shape[0]}    
+:x: Invalid ID entries: **{nrows_before - nrows_after}**    
+:heavy_check_mark: Valid entries in the dataframe: **{nrows_after}**""")
 
 #setting index:
 df = df.set_index(df['AIRCRAFT_ID'])
@@ -216,6 +202,24 @@ st.dataframe(
     df,
     height=250,
     use_container_width=True)
+
+with st.expander("Check the code"):
+    st.code('''
+    #removing whitespaces
+    df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.replace(" ", "")
+
+    #removing duplicates
+    df = df.drop_duplicates(subset=['AIRCRAFT_ID'], keep='last')
+
+    #ensuring that all ID codes comply to the patterns set in the metadata
+    pattern = '^(PR|PP|PS)-\d{9}$'
+    mask = [bool(match(pattern, code)) for code in df['AIRCRAFT_ID']]
+    df = df[mask]
+
+    #setting index
+    df = df.set_index(df['AIRCRAFT_ID'])
+    df = df.drop(('AIRCRAFT_ID'), axis=1)'''
+    )
 
 st.markdown(
 '''The `EXPIRATION_DATE` was already parsed to datetime format. Even though the feature is already informative as it is, from it we can derive:
@@ -510,6 +514,17 @@ with st.container():
     st.markdown('___')
 
 st.subheader('Explanatory analysis')
+
+left_co, cent_co, right_co = st.columns([0.1, 0.8, 0.1])
+with cent_co:
+    img = Image.open("img/aerial_roof.jpg")
+    # new_img = img.resize(
+    #     (
+    #         int(img.width * 0.05),
+    #         int(img.height * 0.05)
+    #         )
+    #     )
+    st.image(img)
 
 st.markdown(
 '''Let's start by checking the dates related to each aircraft registration. By comparing data of `STATUS`, `REG_DATE` and `EXPIRATON_DATE` features we can better understand the rate of adherence to the system and also about the maintenance of these registers.''')
