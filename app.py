@@ -1,4 +1,5 @@
 ### Importando módulos:
+import numpy as np
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -21,14 +22,13 @@ st.set_page_config(page_title="Aircrafts of SISANT (ANAC) - by Caio Souza")
 
 #setting up the sidebar
 st.sidebar.markdown("# Sections")
-st.sidebar.markdown('[Getting Started](#an-investigation-of-the-national-civil-aviation-agency-of-brazil-s-database-of-unmanned-aircrafts-uavs)')
+st.sidebar.markdown('[Getting Started](#anac-s-uav-database-charting-trends-in-brazilian-unmanned-aviation)')
 st.sidebar.markdown('[Dataframe metadata](#dataframe-metadata)')
 st.sidebar.markdown('[Data pre-processing](#data-pre-processing)')
 st.sidebar.markdown('[Explanatory analysis](#explanatory-analysis)')
 
 #creating the document
-st.header('''ANAC's UAV Database: Charting trends in Brazilian unmanned aviation
-_____''')
+st.header("ANAC's UAV Database: Charting trends in Brazilian unmanned aviation", divider='rainbow')
 
 left_co, cent_co, right_co = st.columns([0.2, 0.6, 0.2])
 with cent_co:
@@ -50,38 +50,10 @@ st.markdown(
 
 st.markdown('''The goal of this project was to study and apply data analysis practices, mainly pre-processing and a bit of explanatory analysis. The cool thing about this application is that the source data is frequently updated, triggering automatic updates to all the graphs and charts.
             
-The sections of this project are presented in the left sidebar. Select the last section if you want to jump right to the data visualization.
+## The sections of this project are presented in the left sidebar.    
+## Select the last section if you want to jump right to the data visualization.
 _____'''
 )
-
-with st.expander("Check the code"):
-    st.code(
-    '''#importing libs
-    import pandas as pd
-    import streamlit as st
-    import matplotlib.pyplot as plt
-    import plotly.express as px
-    import plotly.graph_objects as go
-    import plotly.subplots as sp
-    from PIL import Image
-    from re import match
-    from wordcloud import WordCloud
-
-    #loading data, dropping NAs and renaming features
-    url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
-
-    df = pd.read_csv(
-        url,
-        delimiter=';',
-        skiprows=1,
-        parse_dates=['DATA_VALIDADE'],
-        date_parser=lambda x: pd.to_datetime(x, format=r'%d/%m/%Y')
-        )
-
-    df.dropna(inplace=True)
-
-    df.columns = ['AIRCRAFT_ID', 'EXPIRATION_DATE', 'OPERATOR', 'CPF_CNPJ', 'TYPE_OF_USE', 'MANUFACTURER', 'MODEL', 'SERIAL_NUMBER', 'MAX_WEIGHT_TAKEOFF','TYPE_OF_ACTIVITY']'''
-    )
 
 #loading data, dropping NAs and renaming features
 url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
@@ -112,6 +84,35 @@ st.dataframe(
     df,
     height=250,
     use_container_width=True
+    )
+
+with st.expander("Check the code :bulb:"):
+    st.code(
+    '''#importing libs
+    import pandas as pd
+    import streamlit as st
+    import matplotlib.pyplot as plt
+    import plotly.express as px
+    import plotly.graph_objects as go
+    import plotly.subplots as sp
+    from PIL import Image
+    from re import match
+    from wordcloud import WordCloud
+
+    #loading data, dropping NAs and renaming features
+    url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
+
+    df = pd.read_csv(
+        url,
+        delimiter=';',
+        skiprows=1,
+        parse_dates=['DATA_VALIDADE'],
+        date_parser=lambda x: pd.to_datetime(x, format=r'%d/%m/%Y')
+        )
+
+    df.dropna(inplace=True)
+
+    df.columns = ['AIRCRAFT_ID', 'EXPIRATION_DATE', 'OPERATOR', 'CPF_CNPJ', 'TYPE_OF_USE', 'MANUFACTURER', 'MODEL', 'SERIAL_NUMBER', 'MAX_WEIGHT_TAKEOFF','TYPE_OF_ACTIVITY']'''
     )
 
 st.write('___')
@@ -203,7 +204,7 @@ st.dataframe(
     height=250,
     use_container_width=True)
 
-with st.expander("Check the code"):
+with st.expander("Check the code :bulb:"):
     st.code('''
     #removing whitespaces
     df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.replace(" ", "")
@@ -227,26 +228,6 @@ st.markdown(
 - `REG_DATE` - The date of the registration, calculated from `EXPIRATION_DATE` minus the standard validity period (two years).'''
 )
 
-with st.expander("Check the code"):
-    st.code(
-    '''#creating a function that sorts dates according to register status
-    def reg_status(date):
-        today = pd.Timestamp.today()
-        if date < today:
-            return 'renew'
-        elif date < today - pd.DateOffset(months=6):
-            return 'inactive'
-        else:
-            return 'ok'
-
-    #creating a 'STATUS' feature, containing categorized data about each aircraft
-    df['STATUS'] = df['EXPIRATION_DATE'].apply(reg_status)
-    df['STATUS'] = df['STATUS'].astype('category')
-
-    #creating feature 'REG_DATE'
-    df['REG_DATE'] = df['EXPIRATION_DATE'] - pd.DateOffset(years=2)'''
-    )
-
 #creating a function that sorts dates according to register status (register ok, renew ou inactive)
 def reg_status(date):
     today = pd.Timestamp.today()
@@ -264,46 +245,48 @@ df['STATUS'] = df['STATUS'].astype('category')
 #creating feature 'REG_DATE'
 df['REG_DATE'] = df['EXPIRATION_DATE'] - pd.DateOffset(years=2)
 
-st.write(df[['STATUS', 'REG_DATE']])
+#st.write(df[['STATUS', 'REG_DATE']])
 
-st.markdown(
-'''Following, the `CPF_CNPJ` feature was worked on.'''
-)
+# st.markdown(
+# '''Following, the `CPF_CNPJ` feature was worked on.'''
+# )
 
-with st.expander("Check the code"):
-    st.code(
-    '''#removing whitespaces from the 'CPF_CNPJ'
-    df['CPF_CNPJ'] = df['CPF_CNPJ'].str.replace(" ", "")'''
-    )
+# with st.expander("Check the code :bulb:"):
+#     st.code(
+#     '''#removing whitespaces from the 'CPF_CNPJ'
+#     df['CPF_CNPJ'] = df['CPF_CNPJ'].str.replace(" ", "")'''
+#     )
 
 #removing whitespaces from the 'CPF_CNPJ'
 df['CPF_CNPJ'] = df['CPF_CNPJ'].str.replace(" ", "")
 
-st.write(df['CPF_CNPJ'])
-
 st.markdown(
-'''After a close look at the values of `CPF_CNPJ`, it's possible to see that it holds two types of information:
+'''Following, the `CPF_CNPJ` feature was worked on. After a close look on its values, it's possible to see that it holds two types of information:
 - CPF or CNPJ: individuals or companies, respectively;
 - Numbers 0-9: its proper number code. It's important to note that the CPF numbers are distributed in suppressed form due to privacy. The CNPJ numbers are public information however.    
 
 So we are going to split this feature into: 
 - `LEGAL_ENT`, with two categories (individual or company); and
-- `ENT_NUM`, containing its number code.'''
+- `ENT_NUM`, containing its number code.
+
+Here are the new features:'''
 )
 
-with st.expander("Check the code"):
-    st.code(
-    '''df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
-        lambda x: 'individual' if x.startswith('CPF') else 'company'
-        ).astype('category')
+#st.write(df['CPF_CNPJ'])
 
-    df['ENT_NUM'] = df['CPF_CNPJ'].apply(
-        lambda x: ''.join(filter(str.isdigit, x.replace(':', '')))
-        ).astype('category')
+# with st.expander("Check the code :bulb:"):
+#     st.code(
+#     '''df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
+#         lambda x: 'individual' if x.startswith('CPF') else 'company'
+#         ).astype('category')
 
-    #dropping CPF_CNPJ 
-    df = df.drop(('CPF_CNPJ'), axis=1)'''   
-    )
+#     df['ENT_NUM'] = df['CPF_CNPJ'].apply(
+#         lambda x: ''.join(filter(str.isdigit, x.replace(':', '')))
+#         ).astype('category')
+
+#     #dropping CPF_CNPJ 
+#     df = df.drop(('CPF_CNPJ'), axis=1)'''   
+#     )
 
 # Splitting the 'CPF_CNPJ' feature into 'LEGAL_ENT' and 'ENT_NUM'
 df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
@@ -317,7 +300,43 @@ df['ENT_NUM'] = df['CPF_CNPJ'].apply(
 #dropping CPF_CNPJ
 df = df.drop(('CPF_CNPJ'), axis=1)
 
-st.write(df[['LEGAL_ENT', 'ENT_NUM']])
+#st.write(df[['LEGAL_ENT', 'ENT_NUM']])
+st.write(df[['STATUS', 'REG_DATE', 'LEGAL_ENT', 'ENT_NUM']])
+
+with st.expander("Check the code :bulb:"):
+    st.code(
+    '''#function that sorts dates according to register status
+def reg_status(date):
+    today = pd.Timestamp.today()
+    if date < today:
+        return 'renew'
+    elif date < today - pd.DateOffset(months=6):
+        return 'inactive'
+    else:
+        return 'ok'
+
+#creating a 'STATUS' feature, containing categorized data about each aircraft
+df['STATUS'] = df['EXPIRATION_DATE'].apply(reg_status)
+df['STATUS'] = df['STATUS'].astype('category')
+
+#creating feature 'REG_DATE'
+df['REG_DATE'] = df['EXPIRATION_DATE'] - pd.DateOffset(years=2)
+
+#removing whitespaces from the 'CPF_CNPJ'
+df['CPF_CNPJ'] = df['CPF_CNPJ'].str.replace(" ", "")
+
+#splitting the 'CPF_CNPJ' feature into 'LEGAL_ENT' and 'ENT_NUM'
+df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
+    lambda x: 'individual' if x.startswith('CPF') else 'company'
+    ).astype('category')
+
+df['ENT_NUM'] = df['CPF_CNPJ'].apply(
+    lambda x: ''.join(filter(str.isdigit, x.replace(':', '')))
+    ).astype('category')
+
+#dropping CPF_CNPJ
+df = df.drop(('CPF_CNPJ'), axis=1)'''
+)
 
 #converting dtype
 df['TYPE_OF_USE'] = df['TYPE_OF_USE'].apply(
@@ -327,55 +346,11 @@ df['TYPE_OF_USE'] = df['TYPE_OF_USE'].apply(
 
 
 st.markdown(
-'''The `MANUFACTURER` and `MODEL` features demanded more attention because, as they contain text input, they may have different values for the same category.
-  
-Example: `DJI`, `Dji` and `dji` represents same manufacturer. 
+'''The `MANUFACTURER` and `TYPE_OF_ACTIVITY` features demanded more attention. Because they contain text input from the drone operator, it is not expected that the values will be standardized in the way they are written. For example, `DJI`, `Dji` and `dji` may be interpreted differently within the analysis, although they represent the same manufacturer. 
 
-We started with `MANUFACTURER` (`MODEL` will be transformed in another moment because we will work only with the models provided by the most frequent drone manufacturer in the database).''')
+To solve this problem it was created a function that, given a dataframe column and a map, the names were replaced by standardized names.
 
-with st.expander("Check the code"):
-    st.code(
-    '''#creating function that, given a dataframe column and a map, the names 
-    #are replaced by standardized names
-    def fix_names(column, namemap, df=df):
-        for fixed_name, bad_names in namemap.items():
-            df.loc[df[column].str.contains(bad_names, regex=True), column] = fixed_name
-
-    df['MANUFACTURER'] = df['MANUFACTURER'].str.lower().strip().replace(" ", "")
-
-    #the dictionary was created based on the most common values, however,
-    #given the high amount of unique values, lesser expressed and 
-    #unknown manufacturers were grouped in the 'others' category       
-    fab_map = {
-        'autelrobotics': 'autel',
-        'c-fly': 'cfly|c-fly',
-        'custom': 'fabrica|aeromodelo|propria|própria|proprio|próprio|caseiro|montado|artesanal|constru',
-        'dji': 'dji|mavic|phanton|phantom',
-        'flyingcircus': 'circus',
-        'geprc': 'gepr',
-        'highgreat': 'highgreat',
-        'horus': 'horus',
-        'hubsan': 'hubsan|hubsen',
-        'nuvemuav': 'nuvem',
-        'others': 'outro',
-        'parrot': 'parrot',
-        'phoenixmodel': 'phoenix',
-        'santiago&cintra': 'santiago|cintra',
-        'sensefly': 'sensefly',
-        'shantou': 'shantou',
-        'sjrc': 'sjrc|srjc',
-        'visuo': 'visuo',
-        'x-fly': 'xfly|x-fly',
-        'xiaomi': 'xiaomi|fimi|xiomi',
-        'xmobots': 'xmobots',
-        'zll': 'zll|sg906'
-        }
-
-    #transforming the feature with the manufacturers names
-    fix_names('MANUFACTURER', fab_map)
-
-    df['MANUFACTURER'] = df['MANUFACTURER'].astype('category')'''
-    )
+Lastly, features that would not be used in the analysis were dropped from the dataframe.''')
 
 #creating function so that, given a dataframe column and a map, the names are replaced by standardized names 
 def fix_names(column, namemap, df=df):
@@ -386,7 +361,7 @@ df['MANUFACTURER'] = df['MANUFACTURER'].str.lower()
 df['MANUFACTURER'] = df['MANUFACTURER'].str.replace(" ", "")
 
 #the dictionary was created based on the most common values, however, given the high amount of unique values, lesser expressed and unknown manufacturers were grouped in the 'others' category
-fab_map = {
+man_map = {
     'autelrobotics': 'autel',
     'c-fly': 'cfly|c-fly',
     'custom': 'fabrica|aeromodelo|propria|própria|proprio|próprio|caseiro|montado|artesanal|constru',
@@ -412,41 +387,41 @@ fab_map = {
     }
 
 #transforming the feature with the manufacturers' names
-fix_names('MANUFACTURER', fab_map)
+fix_names('MANUFACTURER', man_map)
 
 df['MANUFACTURER'] = df['MANUFACTURER'].astype('category')
 
-st.write(
-'''Finally, the `TYPE_OF_ACTIVITY` feature was also validated and transformed. It categorizes the drones into 'Recreational', 'Experimental', and 'Other activities', the latter category being specified in text provided by the user.'''
-)
+# st.write(
+# '''Finally, the `TYPE_OF_ACTIVITY` feature was also validated and transformed. It categorizes the drones into 'Recreational', 'Experimental', and 'Other activities', the latter category being specified in text provided by the user.'''
+# )
 
-with st.expander("Check the code"):
-    st.code(
-    '''#cleaning feature
-    df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.replace(" ", "")
-    df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.lower()
+# with st.expander("Check the code :bulb:"):
+#     st.code(
+#     '''#cleaning feature
+#     df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.replace(" ", "")
+#     df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.lower()
 
-    #again transforming the values of the feature
-    act_map = {
-        'education': 'treinamento|educa|ensin|pesquis',
-        'engineering': 'pulveriz|aeroagr|agricultura|levantamento|fotograme|prospec|topografia|minera|capta|avalia|mapea|geoproc|engenharia|energia|solar|ambiental|constru|obras|industria|arquitetura|meioambiente',    
-        'photo&film': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
-        'logistics': 'transport|carga|delivery',
-        'publicity': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
-        'safety': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
-        }
+#     #again transforming the values of the feature
+#     act_map = {
+#         'education': 'treinamento|educa|ensin|pesquis',
+#         'engineering': 'pulveriz|aeroagr|agricultura|levantamento|fotograme|prospec|topografia|minera|capta|avalia|mapea|geoproc|engenharia|energia|solar|ambiental|constru|obras|industria|arquitetura|meioambiente',    
+#         'photo&film': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
+#         'logistics': 'transport|carga|delivery',
+#         'publicity': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
+#         'safety': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
+#         }
 
-    #reclassifying more specific activities into 'other' and converting the feature dtype
-    fix_names('TYPE_OF_ACTIVITY', act_map, df)
+#     #reclassifying more specific activities into 'other' and converting the feature dtype
+#     fix_names('TYPE_OF_ACTIVITY', act_map, df)
 
-    df.loc[
-        ~df['TYPE_OF_ACTIVITY'].isin(
-            df['TYPE_OF_ACTIVITY'].value_counts().head(8).index
-            ), 'TYPE_OF_ACTIVITY'
-        ] = 'others'
+#     df.loc[
+#         ~df['TYPE_OF_ACTIVITY'].isin(
+#             df['TYPE_OF_ACTIVITY'].value_counts().head(8).index
+#             ), 'TYPE_OF_ACTIVITY'
+#         ] = 'others'
 
-    df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].astype('category')'''
-    )
+#     df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].astype('category')'''
+#     )
 
 #cleaning feature
 df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.replace(" ", "")
@@ -473,24 +448,101 @@ df.loc[
     ] = 'others'
 
 df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].astype('category')
-
-st.markdown(
-'Lastly, features that would not be used in the analysis were removed from the dataframe.'
-)
-
-with st.expander("Check the code"):
-    st.code(
-    '''#dropping features that won't be used
-    df = df.drop(
-        [('SERIAL_NUMBER'), ('MAX_WEIGHT_TAKEOFF')],
-        axis=1
-        )''')
+df['OPERATOR'] = df['OPERATOR'].astype('string')
+df['MODEL'] = df['MODEL'].astype('string')
 
 #dropping features that won't be used
 df = df.drop(
-    [('SERIAL_NUMBER')],
+    ['SERIAL_NUMBER', 'MAX_WEIGHT_TAKEOFF'],
     axis=1
     )
+
+with st.expander("Check the code :bulb:"):
+    st.code(
+    '''#creating function for fixing the names based on a map
+def fix_names(column, namemap, df=df):
+    for fixed_name, bad_names in namemap.items():
+        df.loc[df[column].str.contains(bad_names, regex=True), column] = fixed_name
+        
+#setting lowercase and removing whitespaces
+df['MANUFACTURER'] = df['MANUFACTURER'].str.lower()
+df['MANUFACTURER'] = df['MANUFACTURER'].str.replace(" ", "")
+
+#the following map was created based on the most common values
+man_map = {
+    'autelrobotics': 'autel',
+    'c-fly': 'cfly|c-fly',
+    'custom': 'fabrica|aeromodelo|propria|própria|proprio|próprio|caseiro|montado|artesanal|constru',
+    'dji': 'dji|mavic|phanton|phantom',
+    'flyingcircus': 'circus',
+    'geprc': 'gepr',
+    'highgreat': 'highgreat',
+    'horus': 'horus',
+    'hubsan': 'hubsan|hubsen',
+    'nuvemuav': 'nuvem',
+    'others': 'outro',
+    'parrot': 'parrot',
+    'phoenixmodel': 'phoenix',
+    'santiago&cintra': 'santiago|cintra',
+    'sensefly': 'sensefly',
+    'shantou': 'shantou',
+    'sjrc': 'sjrc|srjc',
+    'visuo': 'visuo',
+    'x-fly': 'xfly|x-fly',
+    'xiaomi': 'xiaomi|fimi|xiomi',
+    'xmobots': 'xmobots',
+    'zll': 'zll|sg906'
+}
+
+#transforming the feature with the manufacturers names
+fix_names('MANUFACTURER', man_map)
+
+df['MANUFACTURER'] = df['MANUFACTURER'].astype('category')
+
+#now its time to fix the 'TYPE_OF_ACTIVITY'
+df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.replace(" ", "")
+df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.lower()
+
+#again transforming the values of the feature based on a map
+act_map = {
+    'education': 'treinamento|educa|ensin|pesquis',
+    'engineering': 'pulveriz|aeroagr|agricultura|levantamento|fotograme|prospec|topografia|minera|capta|avalia|mapea|geoproc|engenharia|energia|solar|ambiental|constru|obras|industria|arquitetura|meioambiente',    
+    'photo&film': 'fotografia|cinema|inspe|vídeo|video|fotos|jornal|filma|maker|audit|monit|perícia|audiovisu|vistoria|imagens|turismo|youtube|imobili|imóveis',
+    'logistics': 'transport|carga|delivery',
+    'publicity': 'publicid|letreir|show|marketing|demonstr|eventos|comercial',
+    'recreative': 'recreativo',
+    'safety': 'seguran|fiscaliza|reporta|vigi|policia|bombeiro|defesa|combate|emergencia|infraestrutura'
+    }
+
+#transformin the feature
+fix_names('TYPE_OF_ACTIVITY', act_map, df)
+
+df.loc[
+    ~df['TYPE_OF_ACTIVITY'].isin(
+        df['TYPE_OF_ACTIVITY'].value_counts().head(8).index
+        ), 'TYPE_OF_ACTIVITY'
+    ] = 'others'
+
+df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].astype('category')
+
+df = df.drop(
+    ['OPERATOR', 'SERIAL_NUMBER', 'MAX_WEIGHT_TAKEOFF'],
+    axis=1
+    )
+'''
+)
+
+# st.markdown(
+# 'Lastly, features that would not be used in the analysis were removed from the dataframe.'
+# )
+
+# with st.expander("Check the code :bulb:"):
+#     st.code(
+#     '''#dropping features that won't be used
+#     df = df.drop(
+#         [('SERIAL_NUMBER'), ('MAX_WEIGHT_TAKEOFF')],
+#         axis=1
+#         )''')
 
 st.markdown(':arrow_right: Pre-processed dataframe:')
 
@@ -504,14 +556,9 @@ with st.container():
         info_string
         )
 
-    st.dataframe(
-        df.describe(
-            include='all', 
-            #datetime_is_numeric=True
-            ),
-        height=150
-    )
-    st.markdown('___')
+st.write(df)
+
+st.divider()
 
 st.subheader('Explanatory analysis')
 
@@ -529,7 +576,7 @@ with cent_co:
 st.markdown(
 '''Let's start by checking the dates related to each aircraft registration. By comparing data of `STATUS`, `REG_DATE` and `EXPIRATON_DATE` features we can better understand the rate of adherence to the system and also about the maintenance of these registers.''')
 
-with st.expander("Check the code"):
+with st.expander("Check the code :bulb:"):
     st.code(
     '''#aggregating data by month
     agg_data = df.resample('M', on='REG_DATE').count()
@@ -690,7 +737,7 @@ st.plotly_chart(fig)
 
 st.markdown("Now, through the `TYPE_OF_USE` feature, we will check how the drones perform their activities, in other words, how each drone is operated. The possible categories are 'basic' and 'advanced'. ")
 
-with st.expander("Check the code"):
+with st.expander("Check the code :bulb:"):
     st.code(
     '''#calculate the value counts for each type of use
     value_counts = df['TYPE_OF_USE'].value_counts()
@@ -821,7 +868,7 @@ st.markdown(
 '''To further the understanding of drone usage, the `TYPE_OF_ACTIVITY` feature was then evaluated. The numbers were compared with the newly created `LEGAL_ENT` feature.'''
 )
 
-with st.expander("Check the code"):
+with st.expander("Check the code :bulb:"):
     st.code(
     '''#create the histogram plot
     fig = px.histogram(
@@ -917,7 +964,7 @@ st.markdown(
 '''Finally, the questions regarding manufacturers and their aircraft models were analyzed. We used a word cloud for that (which basically displays words according to their frequency - the higher the frequency, the bigger the word - to visualize the distribution of manufacturers.'''
 )
 
-with st.expander("Check the code"):
+with st.expander("Check the code :bulb:"):
     st.code(
     '''#creating figure and axis
     fig, ax = plt.subplots(figsize=(12,6))
@@ -947,8 +994,13 @@ fig, ax = plt.subplots(figsize=(12,6))
 fig.patch.set_alpha(0.0)
 
 #creating word cloud
+brazil_mask = Image.open("img/brazil_mask.png")
+brazil_mask = np.array(brazil_mask)
 wordcloud = WordCloud(
-    width=1200, height=600, 
+    background_color='white',    
+    width=1200, height=600,
+    mask=brazil_mask,
+    contour_width=3, contour_color='black',
     colormap='tab10'
     ).generate_from_frequencies(
         df['MANUFACTURER'].value_counts()
@@ -967,7 +1019,7 @@ st.pyplot(fig)
 
 st.markdown('It was then checked which are the main aircraft models provided by DJI in the system data. For this, the `MODEL` feature was finally preprocessed.')
 
-with st.expander("Check the code"):
+with st.expander("Check the code :bulb:"):
     st.code(
     '''#creating subset containing dji aircrafts
     dji_df = df.loc[df['MANUFACTURER']=='dji']
@@ -1067,7 +1119,7 @@ st.plotly_chart(fig)
 
 st.markdown('Which brands do individuals and companies prefer?')
 
-with st.expander("Check the code"):
+with st.expander("Check the code :bulb:"):
     st.code(
     '''#creating subsets based on LEGAL_ENT
     ind_df = df.loc[df['LEGAL_ENT'] == 'individual', 'MANUFACTURER']
