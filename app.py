@@ -41,18 +41,20 @@ with cent_co:
         )
     st.image(new_img)
 
-st.markdown('''The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for airspace use is still being built, as well as systems for registering and regulating these aircraft. SISANT (Unmanned Aircraft System) is a national system that collects data about the aircraft owner (also called operator) as well as the activities for which it is used. The operator is accountable for the information provided, and it can only legally operate a UAV in Brazilian territory after properly registering in this system.'''
+st.markdown(
+    '''The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for airspace use is still being built, as well as systems for registering and regulating these aircraft. SISANT (Unmanned Aircraft System) is a national system that collects data about the aircraft owner (also called operator) as well as the activities for which it is used. The operator is accountable for the information provided, and it can only legally operate a UAV in Brazilian territory after properly registering in this system.'''
 )
 
 st.markdown(
-'''This application uses weekly updated public data from SISANT, under the National Civil Aviation Agency of Brazil (ANAC) administration. The data is hosted at the [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados) portal and contains the unmanned aircraft registered in compliance with [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).'''
+    '''This application uses weekly updated public data from SISANT, under the National Civil Aviation Agency of Brazil (ANAC) administration. The data is hosted at the [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados) portal and contains the unmanned aircraft registered in compliance with [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94).'''
 ) 
 
-st.markdown('''The goal of this project was to study and apply data analysis practices, mainly pre-processing and a bit of explanatory analysis. The cool thing about this application is that the source data is frequently updated, triggering automatic updates to all the graphs and charts.
-            
-## The sections of this project are presented in the left sidebar.    
-## Select the last section if you want to jump right to the data visualization.
-_____'''
+st.markdown(
+    '''The goal of this project was to study and apply data analysis practices, mainly pre-processing and a bit of explanatory analysis. The cool thing about this application is that the source data is frequently updated, triggering automatic updates to all the graphs and charts.
+        
+## The sections of this project are presented in the left sidebar.
+    
+## Go to the Explanatory Analysis section if you want to jump right to the data visualization.'''
 )
 
 #loading data, dropping NAs and renaming features
@@ -87,33 +89,45 @@ st.dataframe(
     )
 
 with st.expander("Check the code :bulb:"):
-    st.code(
-    '''#importing libs
-    import pandas as pd
-    import streamlit as st
-    import matplotlib.pyplot as plt
-    import plotly.express as px
-    import plotly.graph_objects as go
-    import plotly.subplots as sp
-    from PIL import Image
-    from re import match
-    from wordcloud import WordCloud
+    st.code('''
+            #importing libs
+            import numpy as np
+            import pandas as pd
+            import streamlit as st
+            import matplotlib.pyplot as plt
+            import plotly.express as px
+            import plotly.graph_objects as go
+            import plotly.subplots as sp
+            from PIL import Image
+            from re import match
+            from wordcloud import WordCloud
 
-    #loading data, dropping NAs and renaming features
-    url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
+            #loading data, dropping NAs and renaming features
+            url = r'https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv'
 
-    df = pd.read_csv(
-        url,
-        delimiter=';',
-        skiprows=1,
-        parse_dates=['DATA_VALIDADE'],
-        date_parser=lambda x: pd.to_datetime(x, format=r'%d/%m/%Y')
-        )
+            df = pd.read_csv(
+                url,
+                delimiter=';',
+                skiprows=1,
+                parse_dates=['DATA_VALIDADE'],
+                date_parser=lambda x: pd.to_datetime(x, format=r'%d/%m/%Y')
+                )
 
-    df.dropna(inplace=True)
+            df.dropna(inplace=True)
 
-    df.columns = ['AIRCRAFT_ID', 'EXPIRATION_DATE', 'OPERATOR', 'CPF_CNPJ', 'TYPE_OF_USE', 'MANUFACTURER', 'MODEL', 'SERIAL_NUMBER', 'MAX_WEIGHT_TAKEOFF','TYPE_OF_ACTIVITY']'''
-    )
+            df.columns = [
+                'AIRCRAFT_ID', 
+                'EXPIRATION_DATE', 
+                'OPERATOR', 
+                'CPF_CNPJ', 
+                'TYPE_OF_USE', 
+                'MANUFACTURER', 
+                'MODEL', 
+                'SERIAL_NUMBER', 
+                'MAX_WEIGHT_TAKEOFF',
+                'TYPE_OF_ACTIVITY'
+                ]
+                ''')
 
 st.write('___')
 st.subheader('Dataframe metadata:')
@@ -371,12 +385,15 @@ man_map = {
     'highgreat': 'highgreat',
     'horus': 'horus',
     'hubsan': 'hubsan|hubsen',
+    'lumasky': 'lumasky',
+    'kfplan': 'kfp',
     'nuvemuav': 'nuvem',
     'others': 'outro',
     'parrot': 'parrot',
     'phoenixmodel': 'phoenix',
     'santiago&cintra': 'santiago|cintra',
     'sensefly': 'sensefly',
+    'crostars': 'shanghaicrossingcrostarculturetechnology',
     'shantou': 'shantou',
     'sjrc': 'sjrc|srjc',
     'visuo': 'visuo',
@@ -971,12 +988,18 @@ with st.expander("Check the code :bulb:"):
     fig.patch.set_alpha(0.0)
 
     #creating word cloud
-    wordcloud = WordCloud(
-        width=1200, height=600, 
-        colormap='tab10'
-        ).generate_from_frequencies(
-            df['MANUFACTURER'].value_counts()
-            )
+    brazil_mask = Image.open("img/brazil_mask.png")
+    brazil_mask = np.array(brazil_mask)
+    wordcloud = WordCloud(   
+    width=1200, height=600,
+    mask=brazil_mask,
+    relative_scaling=0.4,
+    max_words=2000,
+    min_word_length=3,
+    colormap='tab10'
+    ).generate_from_frequencies(
+        df['MANUFACTURER'].value_counts().drop(labels=['custom', 'others'])
+        )
 
     #setting axis attributes
     ax.axis("off")
@@ -996,14 +1019,15 @@ fig.patch.set_alpha(0.0)
 #creating word cloud
 brazil_mask = Image.open("img/brazil_mask.png")
 brazil_mask = np.array(brazil_mask)
-wordcloud = WordCloud(
-    background_color='white',    
+wordcloud = WordCloud(   
     width=1200, height=600,
     mask=brazil_mask,
-    contour_width=3, contour_color='black',
+    relative_scaling=0.4,
+    max_words=2000,
+    min_word_length=3,
     colormap='tab10'
     ).generate_from_frequencies(
-        df['MANUFACTURER'].value_counts()
+        df['MANUFACTURER'].value_counts().drop(labels=['custom', 'others'])
         )
 
 #setting axis attributes
