@@ -5,7 +5,7 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
-import plotly.subplots as sp
+#import plotly.subplots as sp
 from PIL import Image
 from re import match
 from streamlit_extras.metric_cards import style_metric_cards
@@ -63,15 +63,9 @@ st.markdown(
     """
 )
 
-st.info(
-    "Click on Explanatory Analysis section (side bar) if you want to go straight to the data visualization.",
-    icon="📊",
-)
-
 # loading data, dropping NAs and renaming features
-url = r"https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv"
-
-try:
+@st.cache_resource(ttl="1d")
+def download_data(url):
     df = pd.read_csv(
         url,
         delimiter=";",
@@ -79,6 +73,12 @@ try:
         parse_dates=["DATA_VALIDADE"],
         date_parser=lambda x: pd.to_datetime(x, format=r"%d/%m/%Y"),
     )
+    return df
+
+try:
+    url = r"https://sistemas.anac.gov.br/dadosabertos/Aeronaves/drones%20cadastrados/SISANT.csv"
+    
+    df = download_data(url)
 
 except Exception as e:
     st.error(f"The data could not be downloaded. Error: {e}")
@@ -97,6 +97,11 @@ df.columns = [
     "MAX_WEIGHT_TAKEOFF",
     "TYPE_OF_ACTIVITY",
 ]
+
+st.info(
+    "Click on Explanatory Analysis (sidebar) if you want to go straight to the data visualization.",
+    icon="📊",
+)
 
 st.write(":arrow_right: Features and dataframe information:")
 
@@ -1052,7 +1057,9 @@ wordcloud = WordCloud(
     min_word_length=3,
     colormap="tab10",
 ).generate_from_frequencies(
-    df["MANUFACTURER"].value_counts().drop(labels=["custom", "others"])
+    df["MANUFACTURER"].value_counts()
+    .drop(labels=["custom", "others"])
+    .to_dict()
 )
 
 # setting axis attributes
@@ -1090,205 +1097,209 @@ with st.expander("Check the code :bulb:"):
     ax.axis("off")
     ax.imshow(wordcloud, interpolation='bilinear')"""
     )
+    
+st.markdown("Some trends and events can be observed by analyzing data related to the manufacturer and the type of activity over time.")
 
-st.markdown(
-    "It was then checked which are the main aircraft models provided by DJI in the system data. For this, the `MODEL` feature was finally preprocessed."
-)
+st.info("Click on the labels of the legend to hide/unhide the corresponding lines.", icon="🚀")
 
-# criando subset contendo os drones fabricados pela dji
-dji_df = df.loc[df["MANUFACTURER"] == "dji"]
+# st.markdown(
+#     "It was then checked which are the main aircraft models provided by DJI in the system data. For this, the `MODEL` feature was finally preprocessed."
+# )
 
-# removendo espaços em branco
-dji_df["MODEL"] = dji_df["MODEL"].str.lower()
-dji_df["MODEL"] = dji_df["MODEL"].str.replace(" ", "")
+# # criando subset contendo os drones fabricados pela dji
+# dji_df = df.loc[df["MANUFACTURER"] == "dji"]
 
-# criando dicionário de modelos
-dji_model_map = {
-    "mavic": "mav|air|ma2ue3w|m1p|da2sue1|1ss5|u11x|rc231|m2e|l1p|enterprisedual",
-    "phantom": "phan|wm331a|p4p|w322b|p4mult|w323|wm332a|hanto",
-    "mini": "min|mt2pd|mt2ss5|djimi|mt3m3vd",
-    "spark": "spa|mm1a",
-    "matrice": "matrice|m300",
-    "avata": "avata|qf2w4k",
-    "inspire": "inspire",
-    "tello": "tello|tlw004",
-    "agras": "agras|mg-1p|mg1p|t16|t10|t40|3wwdz",
-    "fpv": "fpv",
-    "others": "dji",
-}
+# # removendo espaços em branco
+# dji_df["MODEL"] = dji_df["MODEL"].str.lower()
+# dji_df["MODEL"] = dji_df["MODEL"].str.replace(" ", "")
 
-# novamente utilizando a função fix_names, dessa vez com argumentos
-# relativos a coluna MODEL
-fix_names("MODEL", dji_model_map, dji_df)
+# # criando dicionário de modelos
+# dji_model_map = {
+#     "mavic": "mav|air|ma2ue3w|m1p|da2sue1|1ss5|u11x|rc231|m2e|l1p|enterprisedual",
+#     "phantom": "phan|wm331a|p4p|w322b|p4mult|w323|wm332a|hanto",
+#     "mini": "min|mt2pd|mt2ss5|djimi|mt3m3vd",
+#     "spark": "spa|mm1a",
+#     "matrice": "matrice|m300",
+#     "avata": "avata|qf2w4k",
+#     "inspire": "inspire",
+#     "tello": "tello|tlw004",
+#     "agras": "agras|mg-1p|mg1p|t16|t10|t40|3wwdz",
+#     "fpv": "fpv",
+#     "others": "dji",
+# }
 
-# renomeando modelos não reconhecidos como "others"
-dji_df.loc[
-    ~dji_df["MODEL"].isin(dji_df["MODEL"].value_counts().head(14).index), "MODEL"
-] = "others"
+# # novamente utilizando a função fix_names, dessa vez com argumentos
+# # relativos a coluna MODEL
+# fix_names("MODEL", dji_model_map, dji_df)
 
-dji_df["MODEL"] = dji_df["MODEL"].astype("category")
+# # renomeando modelos não reconhecidos como "others"
+# dji_df.loc[
+#     ~dji_df["MODEL"].isin(dji_df["MODEL"].value_counts().head(14).index), "MODEL"
+# ] = "others"
 
-# creating the histogram plot
-fig = px.histogram(
-    dji_df,
-    y="MODEL",
-    category_orders={"MODEL": dji_df["MODEL"].value_counts().iloc[:14].index},
-    text_auto=True,
-)
+# dji_df["MODEL"] = dji_df["MODEL"].astype("category")
 
-# set histogram plot attributes
-fig.update_layout(
-    title="Distribution of aircraft models manufactured by DJI in SISANT",
-    title_font=dict(size=24),
-    xaxis=dict(title=None),
-    yaxis=dict(title=None),
-)
+# # creating the histogram plot
+# fig = px.histogram(
+#     dji_df,
+#     y="MODEL",
+#     category_orders={"MODEL": dji_df["MODEL"].value_counts().iloc[:14].index},
+#     text_auto=True,
+# )
 
-# Display the plot
-st.plotly_chart(fig)
+# # set histogram plot attributes
+# fig.update_layout(
+#     title="Distribution of aircraft models manufactured by DJI in SISANT",
+#     title_font=dict(size=24),
+#     xaxis=dict(title=None),
+#     yaxis=dict(title=None),
+# )
 
-with st.expander("Check the code :bulb:"):
-    st.code(
-        """#creating subset containing dji aircrafts
-    dji_df = df.loc[df['MANUFACTURER']=='dji']
+# # Display the plot
+# st.plotly_chart(fig)
 
-    #cleaning whitespaces
-    dji_df['MODEL'] = dji_df['MODEL'].str.lower()
-    dji_df['MODEL'] = dji_df['MODEL'].str.replace(" ", "")
+# with st.expander("Check the code :bulb:"):
+#     st.code(
+#         """#creating subset containing dji aircrafts
+#     dji_df = df.loc[df['MANUFACTURER']=='dji']
 
-    #creating a model dictionary
-    dji_model_map = {
-        'mavic': 'mav|air|ma2ue3w|m1p|da2sue1|1ss5|u11x|rc231|m2e|l1p|enterprisedual',
-        'phantom': 'phan|wm331a|p4p|w322b|p4mult|w323|wm332a|hanto',
-        'mini': 'min|mt2pd|mt2ss5|djimi|mt3m3vd',
-        'spark': 'spa|mm1a',
-        'matrice': 'matrice|m300',
-        'avata': 'avata|qf2w4k',
-        'inspire': 'inspire',
-        'tello': 'tello|tlw004',
-        'agras': 'agras|mg-1p|mg1p|t16|t10|t40|3wwdz',
-        'fpv': 'fpv',
-        'others': 'dji'
-        }
+#     #cleaning whitespaces
+#     dji_df['MODEL'] = dji_df['MODEL'].str.lower()
+#     dji_df['MODEL'] = dji_df['MODEL'].str.replace(" ", "")
 
-    applying the fix_names function to the MODEL feature
-    fix_names('MODEL', dji_model_map, dji_df)
+#     #creating a model dictionary
+#     dji_model_map = {
+#         'mavic': 'mav|air|ma2ue3w|m1p|da2sue1|1ss5|u11x|rc231|m2e|l1p|enterprisedual',
+#         'phantom': 'phan|wm331a|p4p|w322b|p4mult|w323|wm332a|hanto',
+#         'mini': 'min|mt2pd|mt2ss5|djimi|mt3m3vd',
+#         'spark': 'spa|mm1a',
+#         'matrice': 'matrice|m300',
+#         'avata': 'avata|qf2w4k',
+#         'inspire': 'inspire',
+#         'tello': 'tello|tlw004',
+#         'agras': 'agras|mg-1p|mg1p|t16|t10|t40|3wwdz',
+#         'fpv': 'fpv',
+#         'others': 'dji'
+#         }
 
-    #renaming unknown models as "others"
-    dji_df.loc[~dji_df['MODEL'].isin(dji_df['MODEL'].value_counts().head(14).index), 'MODEL'] = 'others'
+#     applying the fix_names function to the MODEL feature
+#     fix_names('MODEL', dji_model_map, dji_df)
 
-    dji_df['MODEL'] = dji_df['MODEL'].astype('category')
+#     #renaming unknown models as "others"
+#     dji_df.loc[~dji_df['MODEL'].isin(dji_df['MODEL'].value_counts().head(14).index), 'MODEL'] = 'others'
 
-    #creating the histogram plot
-    fig = px.histogram(
-        dji_df, 
-        y='MODEL',
-        category_orders={'MODEL': dji_df['MODEL'].value_counts().iloc[:14].index}
-        )
+#     dji_df['MODEL'] = dji_df['MODEL'].astype('category')
 
-    #set histogram plot attributes
-    fig.update_layout(
-        title='Distribution of aircraft models manufactured by DJI in SISANT',
-        title_font=dict(size=24),
-        xaxis=dict(title=None),
-        yaxis=dict(title=None),
-    )"""
-    )
+#     #creating the histogram plot
+#     fig = px.histogram(
+#         dji_df, 
+#         y='MODEL',
+#         category_orders={'MODEL': dji_df['MODEL'].value_counts().iloc[:14].index}
+#         )
 
-st.markdown("Which brands do individuals and companies prefer?")
+#     #set histogram plot attributes
+#     fig.update_layout(
+#         title='Distribution of aircraft models manufactured by DJI in SISANT',
+#         title_font=dict(size=24),
+#         xaxis=dict(title=None),
+#         yaxis=dict(title=None),
+#     )"""
+#     )
 
-with st.expander("Check the code :bulb:"):
-    st.code(
-        """#creating subsets based on LEGAL_ENT
-    ind_df = df.loc[df['LEGAL_ENT'] == 'individual', 'MANUFACTURER']
-    co_df = df.loc[df['LEGAL_ENT'] == 'company', 'MANUFACTURER']
+# st.markdown("Which brands do individuals and companies prefer?")
 
-    #creating figure and subplots
-    fig = sp.make_subplots(
-        rows=1, 
-        cols=2, 
-        subplot_titles=('individuals', 'companies'), 
-        shared_yaxes=True
-        )
+# with st.expander("Check the code :bulb:"):
+#     st.code(
+#         """#creating subsets based on LEGAL_ENT
+#     ind_df = df.loc[df['LEGAL_ENT'] == 'individual', 'MANUFACTURER']
+#     co_df = df.loc[df['LEGAL_ENT'] == 'company', 'MANUFACTURER']
 
-    #creating the first histogram plot (individuals)
-    fig.add_trace(
-        go.Bar(
-            x=ind_df.value_counts().iloc[:7].index,
-            y=ind_df.value_counts().iloc[:7],
-            marker_color='lightskyblue',
-            text=ind_df.value_counts().iloc[:7],
-            ),
-        row=1,
-        col=1
-        )
+#     #creating figure and subplots
+#     fig = sp.make_subplots(
+#         rows=1, 
+#         cols=2, 
+#         subplot_titles=('individuals', 'companies'), 
+#         shared_yaxes=True
+#         )
 
-    #creating the second histogram plot (companies)
-    fig.add_trace(
-        go.Bar(
-            x=co_df.value_counts().iloc[:7].index,
-            y=co_df.value_counts().iloc[:7],
-            marker_color='lightgreen',
-            text=co_df.value_counts().iloc[:7],
-            ),
-        row=1, 
-        col=2
-        )
+#     #creating the first histogram plot (individuals)
+#     fig.add_trace(
+#         go.Bar(
+#             x=ind_df.value_counts().iloc[:7].index,
+#             y=ind_df.value_counts().iloc[:7],
+#             marker_color='lightskyblue',
+#             text=ind_df.value_counts().iloc[:7],
+#             ),
+#         row=1,
+#         col=1
+#         )
 
-    #updating layout and axis labels
-    fig.update_layout(
-        title='Distribution of aircraft manufacturers by legal nature',
-        title_font=dict(size=24),
-        showlegend=False,
-        yaxis=dict(title=None),
-        yaxis2=dict(title=None)
-        )"""
-    )
+#     #creating the second histogram plot (companies)
+#     fig.add_trace(
+#         go.Bar(
+#             x=co_df.value_counts().iloc[:7].index,
+#             y=co_df.value_counts().iloc[:7],
+#             marker_color='lightgreen',
+#             text=co_df.value_counts().iloc[:7],
+#             ),
+#         row=1, 
+#         col=2
+#         )
 
-# creating subsets based on LEGAL_ENT
-ind_df = df.loc[df["LEGAL_ENT"] == "individual", "MANUFACTURER"]
-co_df = df.loc[df["LEGAL_ENT"] == "company", "MANUFACTURER"]
+#     #updating layout and axis labels
+#     fig.update_layout(
+#         title='Distribution of aircraft manufacturers by legal nature',
+#         title_font=dict(size=24),
+#         showlegend=False,
+#         yaxis=dict(title=None),
+#         yaxis2=dict(title=None)
+#         )"""
+#     )
 
-# creating figure and subplots
-fig = sp.make_subplots(
-    rows=1, cols=2, subplot_titles=("individuals", "companies"), shared_yaxes=True
-)
+# # creating subsets based on LEGAL_ENT
+# ind_df = df.loc[df["LEGAL_ENT"] == "individual", "MANUFACTURER"]
+# co_df = df.loc[df["LEGAL_ENT"] == "company", "MANUFACTURER"]
 
-# creating the first histogram plot (individuals)
-fig.add_trace(
-    go.Bar(
-        x=ind_df.value_counts().iloc[:7].index,
-        y=ind_df.value_counts().iloc[:7],
-        marker_color="lightskyblue",
-        text=ind_df.value_counts().iloc[:7],
-    ),
-    row=1,
-    col=1,
-)
+# # creating figure and subplots
+# fig = sp.make_subplots(
+#     rows=1, cols=2, subplot_titles=("individuals", "companies"), shared_yaxes=True
+# )
 
-# creating the second histogram plot (companies)
-fig.add_trace(
-    go.Bar(
-        x=co_df.value_counts().iloc[:7].index,
-        y=co_df.value_counts().iloc[:7],
-        marker_color="lightgreen",
-        text=co_df.value_counts().iloc[:7],
-    ),
-    row=1,
-    col=2,
-)
+# # creating the first histogram plot (individuals)
+# fig.add_trace(
+#     go.Bar(
+#         x=ind_df.value_counts().iloc[:7].index,
+#         y=ind_df.value_counts().iloc[:7],
+#         marker_color="lightskyblue",
+#         text=ind_df.value_counts().iloc[:7],
+#     ),
+#     row=1,
+#     col=1,
+# )
 
-# updating layout and axis labels
-fig.update_layout(
-    title="Distribution of aircraft manufacturers...",
-    title_font=dict(size=24),
-    showlegend=False,
-    yaxis=dict(title=None),
-    yaxis2=dict(title=None),
-)
+# # creating the second histogram plot (companies)
+# fig.add_trace(
+#     go.Bar(
+#         x=co_df.value_counts().iloc[:7].index,
+#         y=co_df.value_counts().iloc[:7],
+#         marker_color="lightgreen",
+#         text=co_df.value_counts().iloc[:7],
+#     ),
+#     row=1,
+#     col=2,
+# )
 
-# displaying
-st.plotly_chart(fig)
+# # updating layout and axis labels
+# fig.update_layout(
+#     title="Distribution of aircraft manufacturers...",
+#     title_font=dict(size=24),
+#     showlegend=False,
+#     yaxis=dict(title=None),
+#     yaxis2=dict(title=None),
+# )
+
+# # displaying
+# st.plotly_chart(fig)
 
 # weight = df[
 #     (df['MAX_WEIGHT_TAKEOFF'] > df['MAX_WEIGHT_TAKEOFF'].quantile(0.02))
@@ -1303,51 +1314,51 @@ st.plotly_chart(fig)
 
 # st.plotly_chart(fig)
 
-ind_models = dji_df.loc[dji_df["LEGAL_ENT"] == "individual", "MODEL"]
+# ind_models = dji_df.loc[dji_df["LEGAL_ENT"] == "individual", "MODEL"]
 
-co_models = dji_df.loc[dji_df["LEGAL_ENT"] == "company", "MODEL"]
+# co_models = dji_df.loc[dji_df["LEGAL_ENT"] == "company", "MODEL"]
 
-# creating figure and subplots
-fig = sp.make_subplots(
-    rows=1, cols=2, subplot_titles=("individuals", "companies"), shared_yaxes=True
-)
+# # creating figure and subplots
+# fig = sp.make_subplots(
+#     rows=1, cols=2, subplot_titles=("individuals", "companies"), shared_yaxes=True
+# )
 
-# creating the first histogram plot (individuals)
-fig.add_trace(
-    go.Bar(
-        x=ind_models.value_counts().iloc[:7].index,
-        y=ind_models.value_counts().iloc[:7],
-        # marker_color='lightskyblue',
-        text=ind_models.value_counts().iloc[:7],
-    ),
-    row=1,
-    col=1,
-)
+# # creating the first histogram plot (individuals)
+# fig.add_trace(
+#     go.Bar(
+#         x=ind_models.value_counts().iloc[:7].index,
+#         y=ind_models.value_counts().iloc[:7],
+#         # marker_color='lightskyblue',
+#         text=ind_models.value_counts().iloc[:7],
+#     ),
+#     row=1,
+#     col=1,
+# )
 
-# creating the second histogram plot (companies)
-fig.add_trace(
-    go.Bar(
-        x=co_models.value_counts().iloc[:7].index,
-        y=co_models.value_counts().iloc[:7],
-        # marker_color='lightgreen',
-        text=co_models.value_counts().iloc[:7],
-    ),
-    row=1,
-    col=2,
-)
+# # creating the second histogram plot (companies)
+# fig.add_trace(
+#     go.Bar(
+#         x=co_models.value_counts().iloc[:7].index,
+#         y=co_models.value_counts().iloc[:7],
+#         # marker_color='lightgreen',
+#         text=co_models.value_counts().iloc[:7],
+#     ),
+#     row=1,
+#     col=2,
+# )
 
-# updating layout and axis labels
-fig.update_layout(
-    title="...and the distribution of DJI models.",
-    title_font=dict(size=24),
-    title_x=0.45,
-    showlegend=False,
-    yaxis=dict(title=None),
-    yaxis2=dict(title=None),
-)
+# # updating layout and axis labels
+# fig.update_layout(
+#     title="...and the distribution of DJI models.",
+#     title_font=dict(size=24),
+#     title_x=0.45,
+#     showlegend=False,
+#     yaxis=dict(title=None),
+#     yaxis2=dict(title=None),
+# )
 
-# displaying
-st.plotly_chart(fig)
+# # displaying
+# st.plotly_chart(fig)
 
 # #//CONSULT CNPJS TO CHECK WHICH BRAZILIAN STATE THE DRONE WAS REGISTERED IN
 # co_ids = df.loc[df['LEGAL_ENT'] == 'company']
@@ -1382,6 +1393,16 @@ for act in top10_manuf:
         go.Line(x=manuf_count.loc[act].index, y=manuf_count.loc[act], name=act)
     )
 
+fig.add_annotation(
+    text="Although DJI UAV always represented a large part of the new <br>registrations in the system, other manufacturers sometimes cause <br> some spikes in the number of registrations.",
+    xref="paper",
+    yref="paper",
+    x=0,
+    y=1.3,
+    showarrow=False,
+    font=dict(color="rgb(150,150,150)", family="Roboto", size=20),
+)
+
 st.plotly_chart(fig)
 
 # Group by TYPE_OF_ACTIVITY and use pd.Grouper to group by month, then unstack to pivot the data
@@ -1399,5 +1420,15 @@ for act in top10_act:
     fig.add_trace(
         go.Line(x=act_count.loc[act].index, y=act_count.loc[act], name=act)
     )
+    
+fig.add_annotation(
+    text="""The activities "recreation", "photography and filming" and <br>"engineering" had the highest long-term rates of registration.<br> However, in recent months, there has been a significant surge <br> in the registration of UAVs for "publicity" purposes.""",
+    xref="paper",
+    yref="paper",
+    x=0,
+    y=1.3,
+    showarrow=False,
+    font=dict(color="rgb(150,150,150)", family="Roboto", size=20),
+)
 
 st.plotly_chart(fig)
