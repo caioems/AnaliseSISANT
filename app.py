@@ -11,12 +11,15 @@ from re import match
 from streamlit_extras.metric_cards import style_metric_cards
 from wordcloud import WordCloud
 
-
+#Styling & useful settings
 pd.options.mode.chained_assignment = None
 st.set_page_config(page_title="ANAC UAV Database")
 style_metric_cards(
     background_color=None, border_color="#cccccc", border_left_color="#cccccc"
 )
+title_font = dict(color="rgb(150,150,150)", family="Roboto", size=24)
+
+
 
 # loading CSS style
 # with open('style.css') as css:
@@ -642,7 +645,7 @@ fig.add_annotation(
     y=1.1,
     text="Compliance with the system has increased over the time",
     showarrow=False,
-    font=dict(color="rgb(150,150,150)", size=22, family="Arial"),
+    font=title_font,
 )
 
 st.plotly_chart(fig, use_container_width=True)
@@ -739,7 +742,7 @@ fig.add_annotation(
     y=1.2,
     text="Active drones are in the majority",
     showarrow=False,
-    font=dict(color="rgb(150,150,150)", size=22, family="Arial"),
+    font=title_font,
 )
 
 st.plotly_chart(fig)
@@ -927,6 +930,57 @@ st.markdown(
     """To further the understanding of drone usage, the `TYPE_OF_ACTIVITY` feature was then evaluated. The numbers were compared with the newly created `LEGAL_ENT` feature."""
 )
 
+# create the histogram plot
+fig = px.histogram(
+    df,
+    y="TYPE_OF_ACTIVITY",
+    color="LEGAL_ENT",
+    category_orders={
+        "TYPE_OF_ACTIVITY": df["TYPE_OF_ACTIVITY"].value_counts().iloc[:10].index
+    },
+    height=500,
+)
+
+# setting histogram plot attributes
+fig.update_layout(
+    # title=dict(
+    #     text="Recreational drones are in the majority,",
+    #     font=dict(size=24, family="Open Sans"),
+    # ),
+    legend=dict(
+        title=None,
+        xanchor="right",
+        yanchor="bottom",
+        x=0.92,
+        y=0.05,
+    ),
+    xaxis=dict(title=None),
+    yaxis=dict(title=None),
+)
+
+fig.add_annotation(
+    xref="paper",
+    yref="paper",
+    x=-0.2,
+    y=1.2,
+    text="Recreational drones are in the majority",
+    showarrow=False,
+    font=title_font,
+)
+
+fig.add_annotation(
+    xref="paper",
+    yref="paper",
+    x=-0.2,
+    y=1.1,
+    text="and they are the favorite of the individuals.",
+    showarrow=False,
+    font=dict(color="white", size=16, family="Open Sans"),
+)
+
+# displaying plot
+st.plotly_chart(fig)
+
 with st.expander("Check the code :bulb:"):
     st.code(
         """#create the histogram plot
@@ -973,50 +1027,44 @@ with st.expander("Check the code :bulb:"):
     )"""
     )
 
-# create the histogram plot
-fig = px.histogram(
-    df,
-    y="TYPE_OF_ACTIVITY",
-    color="LEGAL_ENT",
-    category_orders={
-        "TYPE_OF_ACTIVITY": df["TYPE_OF_ACTIVITY"].value_counts().iloc[:10].index
-    },
-    height=500,
-)
-
-# setting histogram plot attributes
-fig.update_layout(
-    title=dict(
-        text="Recreational drones are in the majority,",
-        font=dict(size=24, family="Open Sans"),
-    ),
-    legend=dict(
-        title=None,
-        xanchor="right",
-        yanchor="bottom",
-        x=0.92,
-        y=0.05,
-    ),
-    xaxis=dict(title=None),
-    yaxis=dict(title=None),
-)
-
-fig.add_annotation(
-    xref="paper",
-    yref="paper",
-    x=-0.1,
-    y=1.08,
-    text="and this is the favorite activity of the individuals.",
-    showarrow=False,
-    font=dict(color="white", size=16, family="Open Sans"),
-)
-
-# displaying plot
-st.plotly_chart(fig)
-
 st.markdown(
     """Finally, the questions regarding manufacturers and their aircraft models were analyzed. We used a word cloud for that (which basically displays words according to their frequency - the higher the frequency, the bigger the word - to visualize the distribution of manufacturers."""
 )
+
+counts = df["MANUFACTURER"].value_counts()
+percentages = counts / counts.sum()
+percentages = percentages.apply(lambda x: f"{round(x * 100, 1)}")
+
+# creating figure and axis
+fig, ax = plt.subplots(figsize=(12, 6))
+fig.patch.set_alpha(0.0)
+fig.patch.set_edgecolor('white')
+
+# creating word cloud
+brazil_mask = Image.open("img/brazil_mask.png")
+brazil_mask = np.array(brazil_mask)
+wordcloud = WordCloud(
+    width=1200,
+    height=600,
+    mask=brazil_mask,
+    relative_scaling=0.4,
+    max_words=2000,
+    min_word_length=3,
+    colormap="tab10",
+).generate_from_frequencies(
+    df["MANUFACTURER"].value_counts().drop(labels=["custom", "others"])
+)
+
+# setting axis attributes
+ax.axis("off")
+ax.imshow(wordcloud, interpolation="bilinear")
+
+st.markdown(
+    f"""<p style="text-align:center"><span style="font-family:Gravitas One,sans-serif"><span style="color:#ffffff"><strong><span style="font-size:32px">{percentages[0]}% of the registered brazilian drones<br>were provided by {percentages.index[0].upper()}.</span></strong></span><br><span style="color:#dddddd"><span style="font-size:18px"> {percentages.index[1].upper()} ({percentages[1]}%) and {percentages.index[2].upper()} ({percentages[2]}%) come next.</span></span><br><span style="color:#999999"><span style="font-size:16px">Each of the other manufacturers are represented by {percentages[3]}% or less of the registered aircrafts.</span></span></span></p>""",
+    unsafe_allow_html=True,
+)
+
+st.pyplot(fig)
 
 with st.expander("Check the code :bulb:"):
     st.code(
@@ -1043,91 +1091,9 @@ with st.expander("Check the code :bulb:"):
     ax.imshow(wordcloud, interpolation='bilinear')"""
     )
 
-counts = df["MANUFACTURER"].value_counts()
-percentages = counts / counts.sum()
-percentages = percentages.apply(lambda x: f"{round(x * 100, 1)}")
-
-# creating figure and axis
-fig, ax = plt.subplots(figsize=(12, 6))
-fig.patch.set_alpha(0.0)
-
-# creating word cloud
-brazil_mask = Image.open("img/brazil_mask.png")
-brazil_mask = np.array(brazil_mask)
-wordcloud = WordCloud(
-    width=1200,
-    height=600,
-    mask=brazil_mask,
-    relative_scaling=0.4,
-    max_words=2000,
-    min_word_length=3,
-    colormap="tab10",
-).generate_from_frequencies(
-    df["MANUFACTURER"].value_counts().drop(labels=["custom", "others"])
-)
-
-# setting axis attributes
-ax.axis("off")
-ax.imshow(wordcloud, interpolation="bilinear")
-
-st.markdown(
-    f"""<p style="text-align:center"><span style="font-family:Open Sans,sans-serif"><span style="color:#ffffff"><strong><span style="font-size:32px">{percentages.index[0].upper()} is the most common drone maker, with {percentages[0]}% of all the drones registered.</span></strong></span><br><span style="color:#dddddd"><span style="font-size:18px">Its followed by {percentages.index[1].upper()} ({percentages[1]}%) and {percentages.index[2].upper()} ({percentages[2]}%).</span></span><br><span style="color:#999999"><span style="font-size:16px">Each of the other manufacturers are represented by {percentages[3]}% or less of the registered aircrafts.</span></span></span></p>""",
-    unsafe_allow_html=True,
-)
-
-st.pyplot(fig)
-
 st.markdown(
     "It was then checked which are the main aircraft models provided by DJI in the system data. For this, the `MODEL` feature was finally preprocessed."
 )
-
-with st.expander("Check the code :bulb:"):
-    st.code(
-        """#creating subset containing dji aircrafts
-    dji_df = df.loc[df['MANUFACTURER']=='dji']
-
-    #cleaning whitespaces
-    dji_df['MODEL'] = dji_df['MODEL'].str.lower()
-    dji_df['MODEL'] = dji_df['MODEL'].str.replace(" ", "")
-
-    #creating a model dictionary
-    dji_model_map = {
-        'mavic': 'mav|air|ma2ue3w|m1p|da2sue1|1ss5|u11x|rc231|m2e|l1p|enterprisedual',
-        'phantom': 'phan|wm331a|p4p|w322b|p4mult|w323|wm332a|hanto',
-        'mini': 'min|mt2pd|mt2ss5|djimi|mt3m3vd',
-        'spark': 'spa|mm1a',
-        'matrice': 'matrice|m300',
-        'avata': 'avata|qf2w4k',
-        'inspire': 'inspire',
-        'tello': 'tello|tlw004',
-        'agras': 'agras|mg-1p|mg1p|t16|t10|t40|3wwdz',
-        'fpv': 'fpv',
-        'others': 'dji'
-        }
-
-    applying the fix_names function to the MODEL feature
-    fix_names('MODEL', dji_model_map, dji_df)
-
-    #renaming unknown models as "others"
-    dji_df.loc[~dji_df['MODEL'].isin(dji_df['MODEL'].value_counts().head(14).index), 'MODEL'] = 'others'
-
-    dji_df['MODEL'] = dji_df['MODEL'].astype('category')
-
-    #creating the histogram plot
-    fig = px.histogram(
-        dji_df, 
-        y='MODEL',
-        category_orders={'MODEL': dji_df['MODEL'].value_counts().iloc[:14].index}
-        )
-
-    #set histogram plot attributes
-    fig.update_layout(
-        title='Distribution of aircraft models manufactured by DJI in SISANT',
-        title_font=dict(size=24),
-        xaxis=dict(title=None),
-        yaxis=dict(title=None),
-    )"""
-    )
 
 # criando subset contendo os drones fabricados pela dji
 dji_df = df.loc[df["MANUFACTURER"] == "dji"]
@@ -1180,6 +1146,54 @@ fig.update_layout(
 
 # Display the plot
 st.plotly_chart(fig)
+
+with st.expander("Check the code :bulb:"):
+    st.code(
+        """#creating subset containing dji aircrafts
+    dji_df = df.loc[df['MANUFACTURER']=='dji']
+
+    #cleaning whitespaces
+    dji_df['MODEL'] = dji_df['MODEL'].str.lower()
+    dji_df['MODEL'] = dji_df['MODEL'].str.replace(" ", "")
+
+    #creating a model dictionary
+    dji_model_map = {
+        'mavic': 'mav|air|ma2ue3w|m1p|da2sue1|1ss5|u11x|rc231|m2e|l1p|enterprisedual',
+        'phantom': 'phan|wm331a|p4p|w322b|p4mult|w323|wm332a|hanto',
+        'mini': 'min|mt2pd|mt2ss5|djimi|mt3m3vd',
+        'spark': 'spa|mm1a',
+        'matrice': 'matrice|m300',
+        'avata': 'avata|qf2w4k',
+        'inspire': 'inspire',
+        'tello': 'tello|tlw004',
+        'agras': 'agras|mg-1p|mg1p|t16|t10|t40|3wwdz',
+        'fpv': 'fpv',
+        'others': 'dji'
+        }
+
+    applying the fix_names function to the MODEL feature
+    fix_names('MODEL', dji_model_map, dji_df)
+
+    #renaming unknown models as "others"
+    dji_df.loc[~dji_df['MODEL'].isin(dji_df['MODEL'].value_counts().head(14).index), 'MODEL'] = 'others'
+
+    dji_df['MODEL'] = dji_df['MODEL'].astype('category')
+
+    #creating the histogram plot
+    fig = px.histogram(
+        dji_df, 
+        y='MODEL',
+        category_orders={'MODEL': dji_df['MODEL'].value_counts().iloc[:14].index}
+        )
+
+    #set histogram plot attributes
+    fig.update_layout(
+        title='Distribution of aircraft models manufactured by DJI in SISANT',
+        title_font=dict(size=24),
+        xaxis=dict(title=None),
+        yaxis=dict(title=None),
+    )"""
+    )
 
 st.markdown("Which brands do individuals and companies prefer?")
 
@@ -1359,12 +1373,31 @@ manuf_count = (
     .unstack(fill_value=0)
 )
 
+top10_manuf = df["MANUFACTURER"].value_counts().index[:12].drop(["custom", "others"])
+
 fig = go.Figure()
 
-# Add traces
-fig.add_trace(
-    go.Line(x=manuf_count.loc["crostars"].index, y=manuf_count.loc["crostars"]),
-    # name=manuf_count.columns[-1],
+for act in top10_manuf:
+    fig.add_trace(
+        go.Line(x=manuf_count.loc[act].index, y=manuf_count.loc[act], name=act)
+    )
+
+st.plotly_chart(fig)
+
+# Group by TYPE_OF_ACTIVITY and use pd.Grouper to group by month, then unstack to pivot the data
+act_count = (
+    df.groupby(["TYPE_OF_ACTIVITY", pd.Grouper(key="REG_DATE", freq="M")])
+    .size()
+    .unstack(fill_value=0)
 )
+
+top10_act = df["TYPE_OF_ACTIVITY"].value_counts().index
+
+fig = go.Figure()
+
+for act in top10_act:
+    fig.add_trace(
+        go.Line(x=act_count.loc[act].index, y=act_count.loc[act], name=act)
+    )
 
 st.plotly_chart(fig)
