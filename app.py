@@ -5,7 +5,7 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
-#import plotly.subplots as sp
+import plotly.subplots as sp
 from PIL import Image
 from re import match
 from streamlit_extras.metric_cards import style_metric_cards
@@ -64,7 +64,7 @@ st.markdown(
 )
 
 # loading data, dropping NAs and renaming features
-@st.cache_resource(ttl="1d")
+@st.cache_resource(ttl="3d")
 def download_data(url):
     df = pd.read_csv(
         url,
@@ -948,10 +948,6 @@ fig = px.histogram(
 
 # setting histogram plot attributes
 fig.update_layout(
-    # title=dict(
-    #     text="Recreational drones are in the majority,",
-    #     font=dict(size=24, family="Open Sans"),
-    # ),
     legend=dict(
         title=None,
         xanchor="right",
@@ -966,8 +962,8 @@ fig.update_layout(
 fig.add_annotation(
     xref="paper",
     yref="paper",
-    x=-0.2,
-    y=1.2,
+    x=0,
+    y=1.15,
     text="Recreational drones are in the majority",
     showarrow=False,
     font=title_font,
@@ -976,8 +972,8 @@ fig.add_annotation(
 fig.add_annotation(
     xref="paper",
     yref="paper",
-    x=-0.2,
-    y=1.1,
+    x=0,
+    y=1.08,
     text="and they are the favorite of the individuals.",
     showarrow=False,
     font=dict(color="white", size=16, family="Open Sans"),
@@ -1045,22 +1041,26 @@ fig, ax = plt.subplots(figsize=(12, 6))
 fig.patch.set_alpha(0.0)
 fig.patch.set_edgecolor('white')
 
-# creating word cloud
-brazil_mask = Image.open("img/brazil_mask.png")
-brazil_mask = np.array(brazil_mask)
-wordcloud = WordCloud(
-    width=1200,
-    height=600,
-    mask=brazil_mask,
-    relative_scaling=0.4,
-    max_words=2000,
-    min_word_length=3,
-    colormap="tab10",
-).generate_from_frequencies(
-    df["MANUFACTURER"].value_counts()
-    .drop(labels=["custom", "others"])
-    .to_dict()
-)
+def create_wordcloud(image):
+    mask = Image.open(image)
+    mask = np.array(mask)
+    wordcloud = WordCloud(
+        width=1200,
+        height=600,
+        mask=mask,
+        relative_scaling=0.4,
+        max_words=2000,
+        min_word_length=3,
+        colormap="tab10",
+    ).generate_from_frequencies(
+        df["MANUFACTURER"].value_counts()
+        .drop(labels=["custom", "others"])
+        .to_dict()
+    )
+    return wordcloud
+
+#creating wordcloud
+wordcloud = create_wordcloud("img/brazil_mask.png")
 
 # setting axis attributes
 ax.axis("off")
@@ -1395,6 +1395,7 @@ for act in top10_manuf:
 
 fig.add_annotation(
     text="Although DJI UAV always represented a large part of the new <br>registrations in the system, other manufacturers sometimes cause <br> some spikes in the number of registrations.",
+    align="left",
     xref="paper",
     yref="paper",
     x=0,
@@ -1417,12 +1418,11 @@ top10_act = df["TYPE_OF_ACTIVITY"].value_counts().index
 fig = go.Figure()
 
 for act in top10_act:
-    fig.add_trace(
-        go.Line(x=act_count.loc[act].index, y=act_count.loc[act], name=act)
-    )
-    
+    fig.add_trace(go.Line(x=act_count.loc[act].index, y=act_count.loc[act], name=act))
+
 fig.add_annotation(
-    text="""The activities "recreation", "photography and filming" and <br>"engineering" had the highest long-term rates of registration.<br> However, in recent months, there has been a significant surge <br> in the registration of UAVs for "publicity" purposes.""",
+    text="""Recreation”, “photo & filming”, and “engineering” had the<br>most registrations over time. Recently, there was a surge in<br>UAV registrations for “publicity”""",
+    align="left",
     xref="paper",
     yref="paper",
     x=0,
@@ -1431,4 +1431,100 @@ fig.add_annotation(
     font=dict(color="rgb(150,150,150)", family="Roboto", size=20),
 )
 
+st.plotly_chart(fig)
+
+with st.expander("Check the code :bulb:"):
+    st.code(
+        """# Group by TYPE_OF_ACTIVITY and use pd.Grouper to group by month, then unstack to pivot the data
+act_count = (
+    df.groupby(["TYPE_OF_ACTIVITY", pd.Grouper(key="REG_DATE", freq="M")])
+    .size()
+    .unstack(fill_value=0)
+)
+
+top10_act = df["TYPE_OF_ACTIVITY"].value_counts().index
+
+fig = go.Figure()
+
+for act in top10_act:
+    fig.add_trace(go.Line(x=act_count.loc[act].index, y=act_count.loc[act], name=act))
+
+fig.add_annotation(
+    text="Recreation”, “photo & filming”, and “engineering” had the<br>most registrations over time. Recently, there was a surge in<br>UAV registrations for “publicity”",
+    align="left",
+    xref="paper",
+    yref="paper",
+    x=0,
+    y=1.3,
+    showarrow=False,
+    font=dict(color="rgb(150,150,150)", family="Roboto", size=20),
+)
+
+st.plotly_chart(fig)""")
+
+# creating subsets based on LEGAL_ENT
+ind_df = df.loc[df["LEGAL_ENT"] == "individual", "MANUFACTURER"]
+co_df = df.loc[df["LEGAL_ENT"] == "company", "MANUFACTURER"]
+
+# creating figure and subplots
+fig = sp.make_subplots(
+    rows=1, 
+    cols=2, 
+    #subplot_titles=("individuals", "companies"), 
+    shared_yaxes=True
+)
+
+# creating the first histogram plot (individuals)
+fig.add_trace(
+    go.Bar(
+        name="individuals",
+        x=ind_df.value_counts().iloc[:7].index.drop("custom"),
+        y=ind_df.value_counts().iloc[:7],
+        # marker_color="lightskyblue",
+        text=ind_df.value_counts().iloc[:7],
+    ),
+    row=1,
+    col=1,
+)
+
+# creating the second histogram plot (companies)
+fig.add_trace(
+    go.Bar(
+        name="companies",
+        x=co_df.value_counts().iloc[:7].index.drop("others"),
+        y=co_df.value_counts().iloc[:7],
+        # marker_color="lightgreen",
+        text=co_df.value_counts().iloc[:7],
+    ),
+    row=1,
+    col=2,
+)
+
+# updating layout and axis labels
+fig.update_layout(
+    legend=dict(
+        orientation="h",
+        xref="container",
+        xanchor="center",
+        yref="container",
+        yanchor="bottom",
+        x=0.5,
+        y=0,
+    ),
+    yaxis=dict(title=None),
+    yaxis2=dict(title=None),
+)
+
+fig.add_annotation(
+    text="""Distribution of aircraft manufacturer according to<br>the nature of the operators""",
+    align="left",
+    xref="paper",
+    yref="paper",
+    x=0,
+    y=1.3,
+    showarrow=False,
+    font=title_font,
+)
+
+# displaying
 st.plotly_chart(fig)
