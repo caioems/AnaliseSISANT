@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.subplots as sp
+import text as txt
 from PIL import Image
 from re import match
 from streamlit_extras.metric_cards import style_metric_cards
@@ -29,6 +30,11 @@ title_font = dict(color="rgb(150,150,150)", family="Roboto", size=24)
 #     )
 
 # setting up the sidebar
+left_co, cent_co, right_co = st.sidebar.columns([0.4, 0.2, 0.4])
+with cent_co:
+    lang = st.sidebar.select_slider("Select your language:", label_visibility="collapsed", options=["english", "português brasileiro"], value="english")
+
+lang = "en" if lang == "english" else "pt-br"
 st.sidebar.markdown("# Sections")
 st.sidebar.markdown(
     "[Getting Started](#anac-s-uav-database-charting-trends-in-brazilian-unmanned-aviation)"
@@ -39,7 +45,7 @@ st.sidebar.markdown("[Explanatory analysis](#explanatory-analysis)")
 
 # creating the document
 st.header(
-    "ANAC's UAV Database: Charting trends in Brazilian unmanned aviation",
+    "Charting trends in Brazilian unmanned aviation: ANAC's UAV Database",
     divider="rainbow",
 )
 
@@ -49,19 +55,11 @@ with cent_co:
     new_img = img.resize((int(img.width * 0.05), int(img.height * 0.05)))
     st.image(new_img)
 
-st.markdown(
-    """The use of UAVs (drones) for services in Brazil became popular in the 2010s. However, the legal framework for airspace use is still being built, as well as systems for registering and regulating these aircraft. SISANT (Unmanned Aircraft System) is a national system that collects data about the aircraft owner (also called operator) as well as the activities for which it is used. The operator is accountable for the information provided, and it can only legally operate a UAV in Brazilian territory after properly registering in this system.
-    """
-)
+st.markdown(txt.INTRO1.get(lang))
+ 
+st.markdown(txt.INTRO2.get(lang))
 
-st.markdown(
-    """This application uses weekly updated public data from SISANT, under the National Civil Aviation Agency of Brazil (ANAC) administration. The data is hosted at the [Dados Abertos](https://dados.gov.br/dados/conjuntos-dados/aeronaves-drones-cadastrados) portal and contains the unmanned aircraft registered in compliance with [RBAC-E No 94](https://www.anac.gov.br/assuntos/legislacao/legislacao-1/rbha-e-rbac/rbac/rbac-e-94)."""
-)
-
-st.markdown(
-    """The goal of this project was to study and apply data analysis practices, mainly pre-processing and a bit of explanatory analysis. The cool thing about this application is that the source data is frequently updated, triggering automatic updates to all the graphs and charts.
-    """
-)
+st.markdown(txt.INTRO3.get(lang))
 
 # loading data, dropping NAs and renaming features
 @st.cache_resource(ttl="3d")
