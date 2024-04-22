@@ -32,20 +32,24 @@ title_font = dict(color="rgb(150,150,150)", family="Roboto", size=24)
 # setting up the sidebar
 left_co, cent_co, right_co = st.sidebar.columns([0.4, 0.2, 0.4])
 with cent_co:
-    lang = st.sidebar.select_slider("Select your language:", label_visibility="collapsed", options=["english", "português brasileiro"], value="english")
+    lang = st.sidebar.radio(
+        label="Select your language:",
+        options=[":flag-us: english", ":flag-br: pt-br"],
+        label_visibility="visible",
+        horizontal=True
+    )
 
-lang = "en" if lang == "english" else "pt-br"
-st.sidebar.markdown("# Sections")
-st.sidebar.markdown(
-    "[Getting Started](#anac-s-uav-database-charting-trends-in-brazilian-unmanned-aviation)"
-)
-st.sidebar.markdown("[Dataframe metadata](#dataframe-metadata)")
-st.sidebar.markdown("[Data pre-processing](#data-pre-processing)")
-st.sidebar.markdown("[Explanatory analysis](#explanatory-analysis)")
+lang = "en" if lang == ":flag-us: english" else "pt-br"
+st.sidebar.markdown(txt.SB_TITLE.get(lang))
+st.sidebar.markdown(txt.SECTIONS.get(lang))
+
+st.sidebar.markdown(txt.SB_MENU1.get(lang))
+st.sidebar.markdown(txt.SB_MENU2.get(lang))
+st.sidebar.markdown(txt.SB_MENU3.get(lang))
 
 # creating the document
 st.header(
-    "Charting trends in Brazilian unmanned aviation: ANAC's UAV Database",
+    txt.HEADER.get(lang),
     divider="rainbow",
 )
 
@@ -69,7 +73,8 @@ def download_data(url):
         delimiter=";",
         skiprows=1,
         parse_dates=["DATA_VALIDADE"],
-        date_parser=lambda x: pd.to_datetime(x, format=r"%d/%m/%Y"),
+        #date_parser=lambda x: pd.to_datetime(x, format=r"%d/%m/%Y"),
+        date_format="%d/%m/%Y"
     )
     return df
 
@@ -97,11 +102,11 @@ df.columns = [
 ]
 
 st.info(
-    "Click on Explanatory Analysis (sidebar) if you want to go straight to the data visualization.",
+    txt.INFO.get(lang),
     icon="📊",
 )
 
-st.write(":arrow_right: Features and dataframe information:")
+st.write(txt.BLT_FEATURES.get(lang))
 
 with st.container():
     import io
@@ -172,39 +177,7 @@ with cent_co:
     #     )
     st.image(img)
 
-st.markdown(
-    """- `AIRCRAFT_ID`: Aircraft ID code. Follows rules:
-    - Recreational use (aircraft models): PR-XXXXXXXXX; 
-    - Basic non-recreational use (Class 3 UAV operated in line-of-sight below 400 feet): PP-XXXXXXXXX;
-    - Advanced use (Class 2 UAV and other Class 3): PS-XXXXXXXXX;  
-    - Note: each X represents a number from 0 to 9.
-
-- `EXPIRATION_DATE`: the date when the two-year validity period expires.  
-
-- `OPERATOR`: Name of the person responsible for operating the drone.
-
-- `CPF/CNPJ`: CPF or CNPJ number of the person responsible for operating the drone.
-
-- `TYPE_OF_USE`:
-    - Basic: aircraft models or Class 3 UAV operated exclusively in line-of-sight below 400 feet AGL;
-    - Advanced: Class 2 UAV or other Class 3 UAV.
-
-- `MANUFACTURER`: Name of aircraft manufacturer.
-  
-- `MODEL`: Aircraft model name. 
-
-- `SERIAL_NUMBER`: Aircraft serial number. 
- 
-- `MAX_WEIGHT_TAKEOFF`: Maximum takeoff weight (numeric, two decimal places, in kilograms).
-
-- `TYPE_OF_ACTIVITY`: 
-    - Recreational (aircraft models);
-    - Experimental (advanced aircraft intended exclusively for operations with experimental purposes);
-    - Other fields of activity as declared by the registrant.
-    
-_____
-"""
-)
+st.markdown(txt.METADATA.get(lang))
 st.subheader("Data pre-processing")
 
 left_co, cent_co, right_co = st.columns([0.1, 0.8, 0.1])
@@ -228,7 +201,7 @@ df = df.drop_duplicates(subset=["AIRCRAFT_ID"], keep="last")
 # check if the ID codes for each aircraft comply to the patterns set in the metadata, and removing those that do not.
 nrows_before = df.shape[0]
 
-pattern = "^(PR|PP|PS)-\d{9}$"
+pattern = r"^(PR|PP|PS)-\d{9}$"
 mask = [bool(match(pattern, code)) for code in df["AIRCRAFT_ID"]]
 df = df[mask]
 
@@ -255,7 +228,7 @@ with st.expander("Check the code :bulb:"):
     df = df.drop_duplicates(subset=['AIRCRAFT_ID'], keep='last')
 
     #ensuring that all ID codes comply to the patterns set in the metadata
-    pattern = '^(PR|PP|PS)-\d{9}$'
+    pattern = r'^(PR|PP|PS)-\d{9}$'
     mask = [bool(match(pattern, code)) for code in df['AIRCRAFT_ID']]
     df = df[mask]
 
@@ -628,7 +601,7 @@ st.markdown(
 )
 
 # aggregating data by month
-agg_data = df.resample("M", on="REG_DATE").count()
+agg_data = df.resample("ME", on="REG_DATE").count()
 agg_data.reset_index(inplace=True)
 
 # creating and displaying line plot
@@ -1065,7 +1038,7 @@ ax.axis("off")
 ax.imshow(wordcloud, interpolation="bilinear")
 
 st.markdown(
-    f"""<p style="text-align:center"><span style="font-family:Gravitas One,sans-serif"><span style="color:#ffffff"><strong><span style="font-size:32px">{percentages[0]}% of the registered brazilian drones<br>were provided by {percentages.index[0].upper()}.</span></strong></span><br><span style="color:#dddddd"><span style="font-size:18px"> {percentages.index[1].upper()} ({percentages[1]}%) and {percentages.index[2].upper()} ({percentages[2]}%) come next.</span></span><br><span style="color:#999999"><span style="font-size:16px">Each of the other manufacturers are represented by {percentages[3]}% or less of the registered aircrafts.</span></span></span></p>""",
+    f"""<p style="text-align:center"><span style="font-family:Gravitas One,sans-serif"><span style="color:#ffffff"><strong><span style="font-size:32px">{percentages.iloc[0]}% of the registered brazilian drones<br>were provided by {percentages.index[0].upper()}.</span></strong></span><br><span style="color:#dddddd"><span style="font-size:18px"> {percentages.index[1].upper()} ({percentages.iloc[1]}%) and {percentages.index[2].upper()} ({percentages.iloc[2]}%) come next.</span></span><br><span style="color:#999999"><span style="font-size:16px">Each of the other manufacturers are represented by {percentages.iloc[3]}% or less of the registered aircrafts.</span></span></span></p>""",
     unsafe_allow_html=True,
 )
 
@@ -1377,7 +1350,7 @@ st.info("Click on the labels of the legend to hide/unhide the corresponding line
 
 # Group by MANUFACTURER and use pd.Grouper to group by month, then unstack to pivot the data
 manuf_count = (
-    df.groupby(["MANUFACTURER", pd.Grouper(key="REG_DATE", freq="M")])
+    df.groupby(["MANUFACTURER", pd.Grouper(key="REG_DATE", freq="ME")], observed=False)
     .size()
     .unstack(fill_value=0)
 )
@@ -1388,7 +1361,9 @@ fig = go.Figure()
 
 for act in top10_manuf:
     fig.add_trace(
-        go.Line(x=manuf_count.loc[act].index, y=manuf_count.loc[act], name=act)
+        go.Scatter(
+            x=manuf_count.loc[act].index, y=manuf_count.loc[act], name=act, mode="lines"
+        )
     )
 
 fig.add_annotation(
@@ -1406,7 +1381,9 @@ st.plotly_chart(fig)
 
 # Group by TYPE_OF_ACTIVITY and use pd.Grouper to group by month, then unstack to pivot the data
 act_count = (
-    df.groupby(["TYPE_OF_ACTIVITY", pd.Grouper(key="REG_DATE", freq="M")])
+    df.groupby(
+        ["TYPE_OF_ACTIVITY", pd.Grouper(key="REG_DATE", freq="ME")], observed=False
+    )
     .size()
     .unstack(fill_value=0)
 )
@@ -1416,7 +1393,7 @@ top10_act = df["TYPE_OF_ACTIVITY"].value_counts().index
 fig = go.Figure()
 
 for act in top10_act:
-    fig.add_trace(go.Line(x=act_count.loc[act].index, y=act_count.loc[act], name=act))
+    fig.add_trace(go.Scatter(x=act_count.loc[act].index, y=act_count.loc[act], name=act, mode="lines"))
 
 fig.add_annotation(
     text="""Recreation”, “photo & filming”, and “engineering” had the<br>most registrations over time. Recently, there was a surge in<br>UAV registrations for “publicity”""",
@@ -1445,7 +1422,7 @@ top10_act = df["TYPE_OF_ACTIVITY"].value_counts().index
 fig = go.Figure()
 
 for act in top10_act:
-    fig.add_trace(go.Line(x=act_count.loc[act].index, y=act_count.loc[act], name=act))
+    fig.add_trace(go.Scatter(x=act_count.loc[act].index, y=act_count.loc[act], name=act, mode="lines"))
 
 fig.add_annotation(
     text="Recreation”, “photo & filming”, and “engineering” had the<br>most registrations over time. Recently, there was a surge in<br>UAV registrations for “publicity”",
