@@ -52,6 +52,11 @@ INFO = {
     "pt-br": "Clique em Análise Explicativa, na barra lateral, se quiser ir direto para a visualização dos dados.",
 }
 
+CHECK_CODE = {
+    "en": "Check the code :bulb:",
+    "pt-br": "Veja o código :bulb:"
+}
+
 BLT_FEATURES = {
     "en": ":arrow_right: Features and dataframe information:",
     "pt-br": ":arrow_right: Features e informações do dataframe:",
@@ -121,4 +126,42 @@ _____
     
 _____
 """,
+}
+
+## DATA PRE-PROCESSING
+DPP_SUBHEADER = {"en": "Data pre-processing", "pt-br": "Pré-processamento dos dados"}
+
+DPP_MD1 = {
+    "en": """The `AIRCRAFT_ID` feature would be used to index the dataframe at first. However, duplicated values were found and removed. The feature was then tested for values that did not match the digit patterns shown in the metadata. Finally, `AIRCRAFT_ID` was assigned as the dataframe index.""",
+    "pt-br": """A feature `AIRCRAFT_ID` foi escolhida para indexar o dataframe. Registros com valores duplicados foram encontrados e removidos. A feature foi então testada para registros com valores que não correspondiam aos padrões mostrados nos metadados, que também foram removidos. Por último, `AIRCRAFT_ID` foi atribuído como indexador do dataframe.""",
+}
+
+DPP_MD2 = {
+    "en": """The `EXPIRATION_DATE` was already parsed to datetime format. Even though the feature is already informative enough for some time series analysis, from it we can derive:
+- `STATUS` - A categorical feature including each aircraft registration status. According to the regulation, the expiration date is two years from the date of its registration. After six months of expiration the register is no longer renewable (it becomes inactive); and
+- `REG_DATE` - The date of the registration, calculated from `EXPIRATION_DATE` minus the standard validity period (two years).""",
+    "pt-br": """A `EXPIRATION_DATE` foi convertida para o formato datetime. Mesmo que a feature já seja informativa o suficiente para uma análise temporal, ainda podemos derivar dela:
+- `STATUS` - Uma feature categórica que inclui o estado de registro de cada aeronave. De acordo com o regulamento, a data de expiração é de dois anos a partir da data de registo. Após seis meses de expiração, o registo deixa de ser renovável (torna-se inativo); e
+- `REG_DATE` - A data do registro, calculada a partir de `EXPIRATION_DATE` menos o período de validade padrão (dois anos)."""
+}
+
+DPP_MD3 = {
+    "en": """Following, the `CPF_CNPJ` feature was worked on. After a close look on its values, it's possible to see that it holds two types of information:
+- CPF or CNPJ: individuals or companies, respectively;
+- Numbers 0-9: its proper number code. It's important to note that the CPF numbers are distributed in suppressed form due to privacy. The CNPJ numbers are public information however.    
+
+So we are going to split this feature into: 
+- `LEGAL_ENT`, with two categories (individual or company); and
+- `ENT_NUM`, containing its number code.
+
+Here are the new features:""",
+    "pt-br": """Logo em seguida, a feature `CPF_CNPJ` foi tratada. Após uma observação atenta dos seus valores, foi possível perceber que ela carrega dois tipos de informação:
+- CPF ou CNPJ: pessoas físicas ou jurídicas, respetivamente;
+- Números de 0 a 9: seu código numérico e único. É importante ressaltar que os números do CPF são distribuídos de forma censurada por questões de privacidade. Já os números do CNPJ são informações de acesso público.    
+
+Por isso, vamos dividir essa feature em: 
+- `ENT_LEGAL`, com duas categorias (pessoa física ou jurídica); e
+- `NUM_ENT`, que contém o número.
+
+Aqui estão as novas features:"""
 }

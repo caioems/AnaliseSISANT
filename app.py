@@ -118,7 +118,7 @@ with st.container():
 
 st.dataframe(df, height=250, use_container_width=True)
 
-with st.expander("Check the code :bulb:"):
+with st.expander(txt.CHECK_CODE.get(lang)):
     st.code("""
             #importing libs
             import numpy as np
@@ -178,6 +178,7 @@ with cent_co:
     st.image(img)
 
 st.markdown(txt.METADATA.get(lang))
+
 st.subheader("Data pre-processing")
 
 left_co, cent_co, right_co = st.columns([0.1, 0.8, 0.1])
@@ -185,9 +186,7 @@ with cent_co:
     img = Image.open("img/aerial_farm.jpg")
     st.image(img)
 
-st.markdown(
-    """The `AIRCRAFT_ID` feature would be used to index the dataframe at first. However, duplicated values were found and removed. The feature was then tested for values that did not match the digit patterns shown in the metadata. Finally, `AIRCRAFT_ID` was assigned as the dataframe index."""
-)
+st.markdown(txt.DPP_MD1.get(lang))
 
 # checking the duplicates
 dupl = df[df.duplicated(subset=["AIRCRAFT_ID"], keep=False)]
@@ -219,7 +218,7 @@ df = df.drop(("AIRCRAFT_ID"), axis=1)
 
 st.dataframe(df, height=250, use_container_width=True)
 
-with st.expander("Check the code :bulb:"):
+with st.expander(txt.CHECK_CODE.get(lang)):
     st.code("""
     #removing whitespaces
     df['AIRCRAFT_ID'] = df['AIRCRAFT_ID'].str.replace(" ", "")
@@ -236,12 +235,7 @@ with st.expander("Check the code :bulb:"):
     df = df.set_index(df['AIRCRAFT_ID'])
     df = df.drop(('AIRCRAFT_ID'), axis=1)""")
 
-st.markdown(
-    """The `EXPIRATION_DATE` was already parsed to datetime format. Even though the feature is already informative as it is, from it we can derive:
-- `STATUS` - A categorical feature including each aircraft registration status. According to the regulation, the expiration date is two years from the date of registration. After six months of expiration the registration is no longer renewable (it becomes inactive); and
-- `REG_DATE` - The date of the registration, calculated from `EXPIRATION_DATE` minus the standard validity period (two years)."""
-)
-
+st.markdown(txt.DPP_MD2.get(lang))
 
 # creating a function that sorts dates according to register status (register ok, renew ou inactive)
 def reg_status(date):
@@ -267,7 +261,7 @@ df["REG_DATE"] = df["EXPIRATION_DATE"] - pd.DateOffset(years=2)
 # '''Following, the `CPF_CNPJ` feature was worked on.'''
 # )
 
-# with st.expander("Check the code :bulb:"):
+# with st.expander(txt.CHECK_CODE.get(lang):
 #     st.code(
 #     '''#removing whitespaces from the 'CPF_CNPJ'
 #     df['CPF_CNPJ'] = df['CPF_CNPJ'].str.replace(" ", "")'''
@@ -276,21 +270,11 @@ df["REG_DATE"] = df["EXPIRATION_DATE"] - pd.DateOffset(years=2)
 # removing whitespaces from the 'CPF_CNPJ'
 df["CPF_CNPJ"] = df["CPF_CNPJ"].str.replace(" ", "")
 
-st.markdown(
-    """Following, the `CPF_CNPJ` feature was worked on. After a close look on its values, it's possible to see that it holds two types of information:
-- CPF or CNPJ: individuals or companies, respectively;
-- Numbers 0-9: its proper number code. It's important to note that the CPF numbers are distributed in suppressed form due to privacy. The CNPJ numbers are public information however.    
-
-So we are going to split this feature into: 
-- `LEGAL_ENT`, with two categories (individual or company); and
-- `ENT_NUM`, containing its number code.
-
-Here are the new features:"""
-)
+st.markdown(txt.DPP_MD3.get(lang))
 
 # st.write(df['CPF_CNPJ'])
 
-# with st.expander("Check the code :bulb:"):
+# with st.expander(txt.CHECK_CODE.get(lang):
 #     st.code(
 #     '''df['LEGAL_ENT'] = df['CPF_CNPJ'].apply(
 #         lambda x: 'individual' if x.startswith('CPF') else 'company'
@@ -323,7 +307,7 @@ df = df.drop(("CPF_CNPJ"), axis=1)
 # st.write(df[['LEGAL_ENT', 'ENT_NUM']])
 st.write(df[["STATUS", "REG_DATE", "LEGAL_ENT", "ENT_NUM"]])
 
-with st.expander("Check the code :bulb:"):
+with st.expander(txt.CHECK_CODE.get(lang)):
     st.code(
         """#function that sorts dates according to register status
 def reg_status(date):
@@ -424,7 +408,7 @@ df["MANUFACTURER"] = df["MANUFACTURER"].astype("category")
 # '''Finally, the `TYPE_OF_ACTIVITY` feature was also validated and transformed. It categorizes the drones into 'Recreational', 'Experimental', and 'Other activities', the latter category being specified in text provided by the user.'''
 # )
 
-# with st.expander("Check the code :bulb:"):
+# with st.expander(txt.CHECK_CODE.get(lang):
 #     st.code(
 #     '''#cleaning feature
 #     df['TYPE_OF_ACTIVITY'] = df['TYPE_OF_ACTIVITY'].str.replace(" ", "")
@@ -482,7 +466,7 @@ df["MODEL"] = df["MODEL"].astype("string")
 # dropping features that won't be used
 df = df.drop(["SERIAL_NUMBER", "MAX_WEIGHT_TAKEOFF"], axis=1)
 
-with st.expander("Check the code :bulb:"):
+with st.expander(txt.CHECK_CODE.get(lang)):
     st.code(
         """#creating function for fixing the names based on a map
 def fix_names(column, namemap, df=df):
@@ -561,7 +545,7 @@ df = df.drop(
 # 'Lastly, features that would not be used in the analysis were removed from the dataframe.'
 # )
 
-# with st.expander("Check the code :bulb:"):
+# with st.expander(txt.CHECK_CODE.get(lang):
 #     st.code(
 #     '''#dropping features that won't be used
 #     df = df.drop(
@@ -640,7 +624,7 @@ with col2:
 with col3:
     st.metric(label="Total registers:", value=df.shape[0])
 
-with st.expander("Check the code :bulb:"):
+with st.expander(txt.CHECK_CODE.get(lang)):
     st.code(
         """
     #aggregating data by month
@@ -731,7 +715,7 @@ with col1:
 with col2:
     st.metric(label="Expired:", value=n_inact)
 
-with st.expander("Check the code :bulb:"):
+with st.expander(txt.CHECK_CODE.get(lang)):
     st.code(
         """
         #calculating the number of aircraft in each category
@@ -838,7 +822,7 @@ fig.update_layout(dict(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0
 
 st.plotly_chart(fig)
 
-with st.expander("Check the code :bulb:"):
+with st.expander(txt.CHECK_CODE.get(lang)):
     st.code(
         """#calculate the value counts for each type of use
     value_counts = df['TYPE_OF_USE'].value_counts()
@@ -953,7 +937,7 @@ fig.add_annotation(
 # displaying plot
 st.plotly_chart(fig)
 
-with st.expander("Check the code :bulb:"):
+with st.expander(txt.CHECK_CODE.get(lang)):
     st.code(
         """#create the histogram plot
     fig = px.histogram(
@@ -1044,7 +1028,7 @@ st.markdown(
 
 st.pyplot(fig)
 
-with st.expander("Check the code :bulb:"):
+with st.expander(txt.CHECK_CODE.get(lang)):
     st.code(
         """#creating figure and axis
     fig, ax = plt.subplots(figsize=(12,6))
@@ -1129,7 +1113,7 @@ st.info("Click on the labels of the legend to hide/unhide the corresponding line
 # # Display the plot
 # st.plotly_chart(fig)
 
-# with st.expander("Check the code :bulb:"):
+# with st.expander(txt.CHECK_CODE.get(lang):
 #     st.code(
 #         """#creating subset containing dji aircrafts
 #     dji_df = df.loc[df['MANUFACTURER']=='dji']
@@ -1179,7 +1163,7 @@ st.info("Click on the labels of the legend to hide/unhide the corresponding line
 
 # st.markdown("Which brands do individuals and companies prefer?")
 
-# with st.expander("Check the code :bulb:"):
+# with st.expander(txt.CHECK_CODE.get(lang):
 #     st.code(
 #         """#creating subsets based on LEGAL_ENT
 #     ind_df = df.loc[df['LEGAL_ENT'] == 'individual', 'MANUFACTURER']
@@ -1408,7 +1392,7 @@ fig.add_annotation(
 
 st.plotly_chart(fig)
 
-with st.expander("Check the code :bulb:"):
+with st.expander(txt.CHECK_CODE.get(lang)):
     st.code(
         """# Group by TYPE_OF_ACTIVITY and use pd.Grouper to group by month, then unstack to pivot the data
 act_count = (
