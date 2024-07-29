@@ -7,6 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import plotly.subplots as sp
 import text as txt
+import plots as pltxt
 from PIL import Image
 from re import match
 from streamlit_extras.metric_cards import style_metric_cards
@@ -585,7 +586,7 @@ fig = px.line(
     x="REG_DATE",
     y="OPERATOR",
     title=None,
-    labels={"REG_DATE": "", "OPERATOR": "new registers"},
+    labels={"REG_DATE": "", "OPERATOR": pltxt.PLT1_YAXIS.get(lang)},
 )
 
 # adding a customized title
@@ -594,7 +595,7 @@ fig.add_annotation(
     yref="paper",
     x=0,
     y=1.1,
-    text="Compliance with the system has increased over the time",
+    text=pltxt.PLT1_ANNOTATION.get(lang),
     showarrow=False,
     font=title_font,
 )
@@ -605,15 +606,15 @@ col1, col2, col3 = st.columns(3)
 with col1:
     week_data = df.resample("W", on="REG_DATE").count()
     st.metric(
-        label="New registers this week:",
+        label=pltxt.PLT2_METRICS1.get(lang),
         value=week_data.OPERATOR.iloc[-1],
     )
 with col2:
     st.metric(
-        label="Registers last six months:", value=agg_data.OPERATOR.iloc[-7:-1].sum()
+        label=pltxt.PLT2_METRICS2.get(lang), value=agg_data.OPERATOR.iloc[-7:-1].sum()
     )
 with col3:
-    st.metric(label="Total registers:", value=df.shape[0])
+    st.metric(label=pltxt.PLT2_METRICS3.get(lang), value=df.shape[0])
 
 with st.expander(txt.CHECK_CODE.get(lang)):
     st.code(
@@ -691,7 +692,7 @@ fig.add_annotation(
     yref="paper",
     x=0,
     y=1.2,
-    text="Active drones are in the majority",
+    text=pltxt.PLT3_ANNOTATION.get(lang),
     showarrow=False,
     font=title_font,
 )
@@ -702,9 +703,9 @@ st.plotly_chart(fig)
 col1, col2 = st.columns(2)
 with col1:
     week_data = df.resample("W", on="REG_DATE").count()
-    st.metric(label="Expiring drone licenses:", value=n_renew)
+    st.metric(label=pltxt.PLT4_METRICS1.get(lang), value=n_renew)
 with col2:
-    st.metric(label="Expired:", value=n_inact)
+    st.metric(label=pltxt.PLT4_METRICS2.get(lang), value=n_inact)
 
 with st.expander(txt.CHECK_CODE.get(lang)):
     st.code(
@@ -773,7 +774,7 @@ value_counts = df["TYPE_OF_USE"].value_counts()
 fig = go.Figure(
     go.Indicator(
         mode="number",
-        title=dict(text="Currently,"),
+        title=dict(text=pltxt.PLT5_ANNOTATION1.get(lang)),
         value=value_counts.values[0] / value_counts.sum() * 100,
         number=dict(suffix="%", font=dict(family="Open Sans", size=96)),
         domain=dict(x=[0, 1], y=[0.6, 1]),
@@ -788,7 +789,7 @@ fig.add_annotation(
     yanchor="middle",
     x=0.5,
     y=0.5,
-    text="of the aircrafts are in basic operations<br><span style='color:gray'>(up to 25 kg, operated within line of sight and below 400 ft).</span>",
+    text=pltxt.PLT5_ANNOTATION2.get(lang),
     font=dict(color="white", size=20, family="Open Sans"),
     showarrow=False,
 )
@@ -801,7 +802,8 @@ fig.add_annotation(
     yanchor="middle",
     x=0.5,
     y=0.01,
-    text=f"<span style='color:gray'>There are only</span><br><br><span style='font-size:48px'>{value_counts.values[1]}</span><br>UAVs registered for advanced operations.",
+    text=pltxt.PLT5_ANNOTATION3_PT1.get(lang) + value_counts.values[1].astype(str) + pltxt.PLT5_ANNOTATION3_PT2.get(lang),
+    # text=f"<span style='color:gray'>There are only</span><br><br><span style='font-size:48px'>{value_counts.values[1]}</span><br>UAVs registered for advanced operations.",
     font=dict(color="white", size=20, family="Open Sans"),
     showarrow=False,
 )
@@ -906,7 +908,7 @@ fig.add_annotation(
     yref="paper",
     x=0,
     y=1.15,
-    text="Recreational drones are in the majority",
+    text=pltxt.PLT6_ANNOTATION1.get(lang),
     showarrow=False,
     font=title_font,
 )
@@ -916,7 +918,7 @@ fig.add_annotation(
     yref="paper",
     x=0,
     y=1.08,
-    text="and they are the favorite of the individuals.",
+    text=pltxt.PLT6_ANNOTATION2.get(lang),
     showarrow=False,
     font=dict(color="white", size=16, family="Open Sans"),
 )
