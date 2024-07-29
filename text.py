@@ -52,14 +52,21 @@ INFO = {
     "pt-br": "Clique em Análise Explicativa, na barra lateral, se quiser ir direto para a visualização dos dados.",
 }
 
-CHECK_CODE = {
-    "en": "Check the code :bulb:",
-    "pt-br": "Veja o código :bulb:"
-}
+CHECK_CODE = {"en": "Check the code :bulb:", "pt-br": "Veja o código :bulb:"}
 
 BLT_FEATURES = {
     "en": ":arrow_right: Features and dataframe information:",
     "pt-br": ":arrow_right: Features e informações do dataframe:",
+}
+
+BLT_DDF = {
+    "en": ":arrow_right: Pre-processed dataframe:",
+    "pt-br": ":arrow_right: Dataframe pré-processado:",
+}
+
+INFO2 = {
+    "en": "Click on the labels of the legend to hide/unhide the corresponding lines.",
+    "pt-br": "Clique nos rótulos da legenda para ocultar/desativar as linhas correspondentes."
 }
 
 ## METADATA
@@ -140,9 +147,9 @@ DPP_MD2 = {
     "en": """The `EXPIRATION_DATE` was already parsed to datetime format. Even though the feature is already informative enough for some time series analysis, from it we can derive:
 - `STATUS` - A categorical feature including each aircraft registration status. According to the regulation, the expiration date is two years from the date of its registration. After six months of expiration the register is no longer renewable (it becomes inactive); and
 - `REG_DATE` - The date of the registration, calculated from `EXPIRATION_DATE` minus the standard validity period (two years).""",
-    "pt-br": """A `EXPIRATION_DATE` foi convertida para o formato datetime. Mesmo que a feature já seja informativa o suficiente para uma análise temporal, ainda podemos derivar dela:
+    "pt-br": """A feature `EXPIRATION_DATE` foi convertida para o formato datetime. E ainda que ela já seja informativa o suficiente para uma análise temporal, ainda podemos derivar:
 - `STATUS` - Uma feature categórica que inclui o estado de registro de cada aeronave. De acordo com o regulamento, a data de expiração é de dois anos a partir da data de registo. Após seis meses de expiração, o registo deixa de ser renovável (torna-se inativo); e
-- `REG_DATE` - A data do registro, calculada a partir de `EXPIRATION_DATE` menos o período de validade padrão (dois anos)."""
+- `REG_DATE` - A data do registro, calculada a partir de `EXPIRATION_DATE` menos o período de validade padrão (dois anos).""",
 }
 
 DPP_MD3 = {
@@ -163,5 +170,49 @@ Por isso, vamos dividir essa feature em:
 - `ENT_LEGAL`, com duas categorias (pessoa física ou jurídica); e
 - `NUM_ENT`, que contém o número.
 
-Aqui estão as novas features:"""
+Aqui estão as novas features:""",
+}
+
+DPP_MD4 = {
+    "en": """The `MANUFACTURER` and `TYPE_OF_ACTIVITY` features demanded more attention. Because they contain text input from the drone operator, it is not expected that the values will be standardized in the way they are written. For example, `DJI`, `Dji` and `dji` may be interpreted differently within the analysis, although they represent the same manufacturer. 
+
+To solve this problem it was created a function that, given a dataframe column and a map, the names were replaced by standardized names.
+
+Lastly, features that would not be used in the analysis were dropped from the dataframe.""",
+    "pt-br": """As features `MANUFACTURER` e `TYPE_OF_ACTIVITY` precisaram de mais atenção. Como elas contêm entrada de texto feita pelo operador do drone, não é esperado que os valores estejam padronizados na maneira como são escritos. Por exemplo, `DJI`, `Dji` e `dji` podem ser interpretados de forma diferente na análise, embora representem o mesmo fabricante. 
+
+Para resolver esse problema, foi criada uma função onde, dada uma coluna do dataframe e um dicionário, os valores fossem substituídos por valores padronizados.
+
+Por fim, os dados que não seriam usados na análise foram retirados do dataframe.""",
+}
+
+## EXPLANATORY ANALYSIS
+EX_SUBHEADER = {
+    "en": "Explanatory analysis",
+    "pt-br": "Análise explanatória",
+}
+
+EX_MD1 = {
+    "en": """Let's start by checking the dates related to each aircraft registration. By comparing data of `STATUS`, `REG_DATE` and `EXPIRATON_DATE` features we can better understand the rate of adherence to the system and also about the maintenance of these registers.""",
+    "pt-br": """Vamos começar verificando as datas relacionadas a cada registro de aeronave. Comparando os dados das features `STATUS`, `REG_DATE` e `EXPIRATON_DATE` podemos entender melhor a taxa de adesão ao sistema e também quanto à manutenção desses registros."""
+}
+
+EX_MD2 = {
+    "en": "Now, through the `TYPE_OF_USE` feature, we will check how the drones perform their activities, in other words, how each drone is operated. The possible categories are 'basic' and 'advanced'.",
+    "pt-br": """Agora, usando a feature `TYPE_OF_USE`, podemos verificar de que modo os drones são utilizados, em outras palavras, como cada drone é operado. As categorias possíveis são “básico” e “avançado”.""",
+}
+
+EX_MD3 = {
+    "en": """To further the understanding of drone usage, the `TYPE_OF_ACTIVITY` feature was then evaluated. The numbers were compared with the newly created `LEGAL_ENT` feature.""",
+    "pt-br": """Para aprofundar o entendimento do uso dos drones, a feature `TYPE_OF_ACTIVITY` foi avaliada. Os números foram comparados com a feature recém-criada `LEGAL_ENT`."""
+}
+
+EX_MD4 = {
+    "en": """Finally, the questions regarding manufacturers and their aircraft models were analyzed. We used a word cloud for that (which basically displays words according to their frequency - the higher the frequency, the bigger the word - to visualize the distribution of manufacturers.""",
+    "pt-br": """Por fim, foram analisadas as perguntas sobre os fabricantes e seus modelos de aeronaves. Para isso, foi utilizada uma nuvem de palavras (que basicamente exibe palavras de acordo com sua frequência - quanto maior a frequência, maior a palavra) para visualizar a distribuição das fabricantes."""
+}
+
+EX_MD5 = {
+    "en": "Some trends and events can be observed by analyzing data related to the manufacturer and the type of activity over time.",
+    "pt-br": "Algumas tendências e eventos podem ser observados por meio da análise de dados relacionados ao fabricante e ao tipo de atividade ao longo do tempo.",
 }

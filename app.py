@@ -351,14 +351,7 @@ df["TYPE_OF_USE"] = (
 # df['TYPE_OF_USE'] = df['TYPE_OF_USE'].astype('category')
 
 
-st.markdown(
-    """The `MANUFACTURER` and `TYPE_OF_ACTIVITY` features demanded more attention. Because they contain text input from the drone operator, it is not expected that the values will be standardized in the way they are written. For example, `DJI`, `Dji` and `dji` may be interpreted differently within the analysis, although they represent the same manufacturer. 
-
-To solve this problem it was created a function that, given a dataframe column and a map, the names were replaced by standardized names.
-
-Lastly, features that would not be used in the analysis were dropped from the dataframe."""
-)
-
+st.markdown(txt.DPP_MD4.get(lang))
 
 # creating function so that, given a dataframe column and a map, the names are replaced by standardized names
 def fix_names(column, namemap, df=df):
@@ -466,6 +459,30 @@ df["MODEL"] = df["MODEL"].astype("string")
 # dropping features that won't be used
 df = df.drop(["SERIAL_NUMBER", "MAX_WEIGHT_TAKEOFF"], axis=1)
 
+# st.markdown(
+# 'Lastly, features that would not be used in the analysis were removed from the dataframe.'
+# )
+
+# with st.expander(txt.CHECK_CODE.get(lang):
+#     st.code(
+#     '''#dropping features that won't be used
+#     df = df.drop(
+#         [('SERIAL_NUMBER'), ('MAX_WEIGHT_TAKEOFF')],
+#         axis=1
+#         )''')
+
+st.markdown(txt.BLT_DDF.get(lang))
+
+with st.container():
+    import io
+
+    buffer = io.StringIO()
+    df.info(buf=buffer)
+    info_string = buffer.getvalue()
+    st.code(info_string)
+
+st.write(df)
+
 with st.expander(txt.CHECK_CODE.get(lang)):
     st.code(
         """#creating function for fixing the names based on a map
@@ -541,33 +558,9 @@ df = df.drop(
 """
     )
 
-# st.markdown(
-# 'Lastly, features that would not be used in the analysis were removed from the dataframe.'
-# )
-
-# with st.expander(txt.CHECK_CODE.get(lang):
-#     st.code(
-#     '''#dropping features that won't be used
-#     df = df.drop(
-#         [('SERIAL_NUMBER'), ('MAX_WEIGHT_TAKEOFF')],
-#         axis=1
-#         )''')
-
-st.markdown(":arrow_right: Pre-processed dataframe:")
-
-with st.container():
-    import io
-
-    buffer = io.StringIO()
-    df.info(buf=buffer)
-    info_string = buffer.getvalue()
-    st.code(info_string)
-
-st.write(df)
-
 st.divider()
 
-st.subheader("Explanatory analysis")
+st.subheader(txt.EX_SUBHEADER.get(lang))
 
 left_co, cent_co, right_co = st.columns([0.1, 0.8, 0.1])
 with cent_co:
@@ -580,9 +573,7 @@ with cent_co:
     #     )
     st.image(img)
 
-st.markdown(
-    """Let's start by checking the dates related to each aircraft registration. By comparing data of `STATUS`, `REG_DATE` and `EXPIRATON_DATE` features we can better understand the rate of adherence to the system and also about the maintenance of these registers."""
-)
+st.markdown(txt.EX_MD1.get(lang))
 
 # aggregating data by month
 agg_data = df.resample("ME", on="REG_DATE").count()
@@ -773,9 +764,7 @@ with st.expander(txt.CHECK_CODE.get(lang)):
             )"""
     )
 
-st.markdown(
-    "Now, through the `TYPE_OF_USE` feature, we will check how the drones perform their activities, in other words, how each drone is operated. The possible categories are 'basic' and 'advanced'. "
-)
+st.markdown(txt.EX_MD2.get(lang))
 
 # calculate the value counts for each type of use
 value_counts = df["TYPE_OF_USE"].value_counts()
@@ -886,9 +875,7 @@ with st.expander(txt.CHECK_CODE.get(lang)):
     )"""
     )
 
-st.markdown(
-    """To further the understanding of drone usage, the `TYPE_OF_ACTIVITY` feature was then evaluated. The numbers were compared with the newly created `LEGAL_ENT` feature."""
-)
+st.markdown(txt.EX_MD3.get(lang))
 
 # create the histogram plot
 fig = px.histogram(
@@ -983,9 +970,7 @@ with st.expander(txt.CHECK_CODE.get(lang)):
     )"""
     )
 
-st.markdown(
-    """Finally, the questions regarding manufacturers and their aircraft models were analyzed. We used a word cloud for that (which basically displays words according to their frequency - the higher the frequency, the bigger the word - to visualize the distribution of manufacturers."""
-)
+st.markdown(txt.EX_MD4.get(lang))
 
 counts = df["MANUFACTURER"].value_counts()
 percentages = counts / counts.sum()
@@ -1053,9 +1038,9 @@ with st.expander(txt.CHECK_CODE.get(lang)):
     ax.imshow(wordcloud, interpolation='bilinear')"""
     )
     
-st.markdown("Some trends and events can be observed by analyzing data related to the manufacturer and the type of activity over time.")
+st.markdown(txt.EX_MD5.get(lang))
 
-st.info("Click on the labels of the legend to hide/unhide the corresponding lines.", icon="🚀")
+st.info(txt.INFO2.get(lang), icon="🚀")
 
 # st.markdown(
 #     "It was then checked which are the main aircraft models provided by DJI in the system data. For this, the `MODEL` feature was finally preprocessed."
