@@ -67,3 +67,18 @@ PLT6_ANNOTATION2 = {
     "en": "and they are the favorite of the individuals.",
     "pt-br": "e eles são os favoritos das pessoas físicas."
 }
+
+PLT7_ANNOTATION1 = {
+    "en": "Although DJI UAV always represented a large part of the new <br>registrations in the system, other manufacturers sometimes cause <br> some spikes in the number of registrations.",
+    "pt-br": "Apesar da DJI desde sempre representar uma grande parte<BR>dos novos registros no sistema, outros fabricantes, as vezes,<br>causam alguns picos no número de registros."
+}
+
+PLT8_ANNOTATION1 = {
+    "en": """Recreation”, “photo & filming”, and “engineering” had the<br>most registrations over time. Recently, there was a surge in<br>UAV registrations for “publicity”""",
+    "pt-br": """Recreação, fotografia e filmagem, e engenharia tiveram o maior número <br>de registros ao longo do tempo. Recentemente, houve um surto de<br>novos registros para “publicidade”"""
+}
+
+PLT9_ANNOTATION1 = {
+    "en": """Distribution of aircraft manufacturer according to<br>the nature of the operators""",
+    "pt-br": """Distribuição dos fabricantes de drones conforme<br>a natureza dos operadores"""
+}

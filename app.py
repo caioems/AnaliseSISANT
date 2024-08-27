@@ -1338,7 +1338,7 @@ for act in top10_manuf:
     )
 
 fig.add_annotation(
-    text="Although DJI UAV always represented a large part of the new <br>registrations in the system, other manufacturers sometimes cause <br> some spikes in the number of registrations.",
+    text=pltxt.PLT7_ANNOTATION1.get(lang),
     align="left",
     xref="paper",
     yref="paper",
@@ -1367,7 +1367,7 @@ for act in top10_act:
     fig.add_trace(go.Scatter(x=act_count.loc[act].index, y=act_count.loc[act], name=act, mode="lines"))
 
 fig.add_annotation(
-    text="""Recreation”, “photo & filming”, and “engineering” had the<br>most registrations over time. Recently, there was a surge in<br>UAV registrations for “publicity”""",
+    text=pltxt.PLT8_ANNOTATION1.get(lang),
     align="left",
     xref="paper",
     yref="paper",
